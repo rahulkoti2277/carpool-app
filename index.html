@@ -352,6 +352,21 @@
     if (d) currentUser = JSON.parse(d);
   }
 
+  // ══ SCREENS (defined early so available immediately) ══
+  window.showScreen = function(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  };
+
+  window.navTo = function(screenId, btn) {
+    window.showScreen(screenId);
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    if (screenId === 'screen-schedule') renderSchedule();
+    if (screenId === 'screen-members') renderMembers();
+    if (screenId === 'screen-profile') renderProfile();
+  };
+
   // ══ INIT ══
   loadLocal();
   document.getElementById('today-date').textContent = new Date().toLocaleDateString('en-ZA',{weekday:'long',day:'numeric',month:'long'});
@@ -366,7 +381,7 @@
     startApp();
   } else {
     document.getElementById('loading-overlay').style.display = 'none';
-    showScreen('screen-home');
+    window.showScreen('screen-home');
   }
 
   // ══ REAL-TIME LISTENERS ══
@@ -398,25 +413,11 @@
   function startApp() {
     document.getElementById('loading-overlay').style.display = 'none';
     document.getElementById('bottom-nav').style.display = 'flex';
-    showScreen('screen-today');
+    window.showScreen('screen-today');
     renderProfile();
     startListeners();
   }
 
-  // ══ SCREENS ══
-  window.showScreen = function(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-  };
-
-  window.navTo = function(screenId, btn) {
-    showScreen(screenId);
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    if (screenId === 'screen-schedule') renderSchedule();
-    if (screenId === 'screen-members') renderMembers();
-    if (screenId === 'screen-profile') renderProfile();
-  };
 
   // ══ PROFILE ══
   window.saveProfile = async function() {
