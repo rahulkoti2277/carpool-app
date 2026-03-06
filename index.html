@@ -66,7 +66,6 @@
     .pill { display: inline-flex; align-items: center; gap: 5px; background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 4px 10px; font-size: 12px; color: var(--muted); }
     .pill.green { background: rgba(26,58,92,.08); border-color: var(--accent); color: var(--accent); }
     .pill.red { background: rgba(192,57,43,.08); border-color: var(--danger); color: var(--danger); }
-    .pill.orange { background: rgba(180,83,9,.08); border-color: var(--warning); color: var(--warning); }
     .empty { text-align: center; padding: 48px 20px; color: var(--muted); }
     .empty-icon { font-size: 40px; margin-bottom: 12px; }
     .empty p { font-size: 14px; line-height: 1.6; }
@@ -99,16 +98,14 @@
     @keyframes spin { to { transform: rotate(360deg); } }
     .loading-overlay { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; z-index: 500; }
     .loading-overlay .logo-title { font-size: 40px; }
-    /* Onboarding choice cards */
     .choice-card { background: var(--surface); border: 2px solid var(--border); border-radius: 16px; padding: 20px; cursor: pointer; transition: all .2s; text-align: center; }
-    .choice-card:hover, .choice-card.selected { border-color: var(--accent); background: var(--surface2); }
+    .choice-card:hover { border-color: var(--accent); background: var(--surface2); }
     .choice-icon { font-size: 32px; margin-bottom: 10px; }
     .choice-title { font-weight: 700; font-size: 16px; margin-bottom: 4px; }
     .choice-sub { font-size: 13px; color: var(--muted); }
-    /* Pending banner */
-    .pending-banner { background: rgba(180,83,9,.1); border: 1px solid var(--warning); border-radius: 12px; padding: 16px; margin-bottom: 20px; }
-    .pending-banner-title { font-weight: 600; font-size: 15px; color: var(--warning); margin-bottom: 4px; }
-    .pending-banner-sub { font-size: 13px; color: var(--muted); }
+    .auth-link { text-align: center; font-size: 13px; color: var(--muted); margin-top: 16px; }
+    .auth-link a { color: var(--accent); font-weight: 600; cursor: pointer; text-decoration: none; }
+    .error-msg { background: rgba(192,57,43,.08); border: 1px solid var(--danger); border-radius: 10px; padding: 10px 14px; font-size: 13px; color: var(--danger); margin-bottom: 16px; display: none; }
   </style>
 </head>
 <body>
@@ -126,16 +123,58 @@
     <div class="logo-sub">Coordinate daily carpools at Bethel.</div>
     <br/><br/>
     <div style="width:100%;display:flex;flex-direction:column;gap:12px;">
-      <button class="btn btn-primary" onclick="showScreen('screen-onboard')">Get Started</button>
-      <button class="btn btn-secondary" onclick="loadExistingUser()">I already have a profile</button>
+      <button class="btn btn-primary" onclick="showScreen('screen-signup')">Create Account</button>
+      <button class="btn btn-secondary" onclick="showScreen('screen-login')">Sign In</button>
     </div>
+  </div>
+
+  <!-- ══ SIGN UP ══ -->
+  <div class="screen" id="screen-signup">
+    <div class="header">
+      <div><div class="header-title">Create Account</div><div class="header-sub">Set up your RideSync login</div></div>
+      <button class="btn btn-secondary btn-sm" onclick="showScreen('screen-home')">← Back</button>
+    </div>
+    <div class="error-msg" id="signup-error"></div>
+    <div class="field"><label>Your Name</label><input type="text" id="signup-name" placeholder="e.g. Rahul" /></div>
+    <div class="field"><label>Email Address</label><input type="email" id="signup-email" placeholder="e.g. rahul@email.com" /></div>
+    <div class="field"><label>Password</label><input type="password" id="signup-password" placeholder="At least 6 characters" /></div>
+    <div class="field"><label>Confirm Password</label><input type="password" id="signup-confirm" placeholder="Repeat password" /></div>
+    <br/>
+    <button class="btn btn-primary" onclick="signUp()">Create Account →</button>
+    <div class="auth-link">Already have an account? <a onclick="showScreen('screen-login')">Sign in</a></div>
+  </div>
+
+  <!-- ══ SIGN IN ══ -->
+  <div class="screen" id="screen-login">
+    <div class="header">
+      <div><div class="header-title">Welcome Back</div><div class="header-sub">Sign in to your account</div></div>
+      <button class="btn btn-secondary btn-sm" onclick="showScreen('screen-home')">← Back</button>
+    </div>
+    <div class="error-msg" id="login-error"></div>
+    <div class="field"><label>Email Address</label><input type="email" id="login-email" placeholder="your@email.com" /></div>
+    <div class="field"><label>Password</label><input type="password" id="login-password" placeholder="Your password" /></div>
+    <br/>
+    <button class="btn btn-primary" onclick="signIn()">Sign In →</button>
+    <div class="auth-link"><a onclick="showScreen('screen-forgot')">Forgot password?</a></div>
+    <div class="auth-link" style="margin-top:8px;">No account? <a onclick="showScreen('screen-signup')">Create one</a></div>
+  </div>
+
+  <!-- ══ FORGOT PASSWORD ══ -->
+  <div class="screen" id="screen-forgot">
+    <div class="header">
+      <div><div class="header-title">Reset Password</div><div class="header-sub">We'll send you a reset link</div></div>
+      <button class="btn btn-secondary btn-sm" onclick="showScreen('screen-login')">← Back</button>
+    </div>
+    <div class="error-msg" id="forgot-error"></div>
+    <div class="field"><label>Email Address</label><input type="email" id="forgot-email" placeholder="your@email.com" /></div>
+    <br/>
+    <button class="btn btn-primary" onclick="resetPassword()">Send Reset Email</button>
   </div>
 
   <!-- ══ ONBOARDING: CHOOSE PATH ══ -->
   <div class="screen" id="screen-onboard">
     <div class="header">
       <div><div class="header-title">Join or Create</div><div class="header-sub">How would you like to get started?</div></div>
-      <button class="btn btn-secondary btn-sm" onclick="showScreen('screen-home')">← Back</button>
     </div>
     <div style="display:flex;flex-direction:column;gap:14px;">
       <div class="choice-card" onclick="showScreen('screen-create-group')">
@@ -149,6 +188,8 @@
         <div class="choice-sub">Enter an invite code or open an invite link from your group admin.</div>
       </div>
     </div>
+    <br/>
+    <button class="btn btn-danger btn-sm" style="width:auto;align-self:center;" onclick="signOut()">Sign Out</button>
   </div>
 
   <!-- ══ CREATE GROUP ══ -->
@@ -157,14 +198,10 @@
       <div><div class="header-title">Create Group</div><div class="header-sub">Set up your carpool group</div></div>
       <button class="btn btn-secondary btn-sm" onclick="showScreen('screen-onboard')">← Back</button>
     </div>
-    <div class="field"><label>Your Name</label><input type="text" id="create-name" placeholder="e.g. Rahul" /></div>
     <div class="field"><label>Group Name</label><input type="text" id="create-group" placeholder="e.g. Bethel Campus" /></div>
     <div class="field">
       <label>Do you have a car?</label>
-      <select id="create-hascar">
-        <option value="no">No — I need lifts</option>
-        <option value="yes">Yes — I can give lifts</option>
-      </select>
+      <select id="create-hascar"><option value="no">No — I need lifts</option><option value="yes">Yes — I can give lifts</option></select>
     </div>
     <div class="field" id="create-seat-field" style="display:none;">
       <label>Passenger seats (excluding yourself)</label>
@@ -180,17 +217,13 @@
       <div><div class="header-title">Join a Group</div><div class="header-sub">Enter your invite code</div></div>
       <button class="btn btn-secondary btn-sm" onclick="showScreen('screen-onboard')">← Back</button>
     </div>
-    <div class="field"><label>Your Name</label><input type="text" id="join-name" placeholder="e.g. Thabo" /></div>
     <div class="field">
       <label>Invite Code</label>
       <input type="text" id="join-code" placeholder="e.g. BETH01" style="text-transform:uppercase;letter-spacing:3px;font-size:18px;font-weight:700;" />
     </div>
     <div class="field">
       <label>Do you have a car?</label>
-      <select id="join-hascar">
-        <option value="no">No — I need lifts</option>
-        <option value="yes">Yes — I can give lifts</option>
-      </select>
+      <select id="join-hascar"><option value="no">No — I need lifts</option><option value="yes">Yes — I can give lifts</option></select>
     </div>
     <div class="field" id="join-seat-field" style="display:none;">
       <label>Passenger seats (excluding yourself)</label>
@@ -205,7 +238,7 @@
     <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:16px;text-align:center;">
       <div style="font-size:48px;">⏳</div>
       <div style="font-size:22px;font-weight:700;color:var(--accent);">Request Sent!</div>
-      <div style="font-size:15px;color:var(--muted);max-width:280px;line-height:1.6;">Your request to join <strong id="pending-group-name"></strong> has been sent. A driver in the group will approve you shortly.</div>
+      <div style="font-size:15px;color:var(--muted);max-width:280px;line-height:1.6;">Your request to join <strong id="pending-group-name"></strong> has been sent. A driver will approve you shortly.</div>
       <br/>
       <button class="btn btn-secondary" style="max-width:280px;" onclick="checkApprovalStatus()">Check Status</button>
       <button class="btn btn-danger btn-sm" onclick="cancelJoinRequest()">Cancel Request</button>
@@ -246,13 +279,11 @@
     <div class="header">
       <div><div class="header-title">Members</div><div class="header-sub" id="members-group-name"></div></div>
     </div>
-    <!-- Pending approvals (drivers/admin only) -->
     <div id="pending-section" style="display:none;">
       <div class="section-title">Pending Approval <span id="pending-count" class="badge-danger"></span></div>
       <div id="pending-list" class="gap" style="margin-bottom:20px;"></div>
     </div>
-    <!-- Invite section -->
-    <div id="invite-section" style="margin-bottom:20px;">
+    <div style="margin-bottom:20px;">
       <div class="section-title">Invite People</div>
       <div class="code-box">
         <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Group Code</div>
@@ -278,6 +309,7 @@
           <div class="avatar" id="profile-avatar" style="width:52px;height:52px;font-size:20px;"></div>
           <div>
             <div style="font-weight:600;font-size:18px;" id="profile-name-display"></div>
+            <div style="color:var(--muted);font-size:13px;" id="profile-email-display"></div>
             <div style="color:var(--muted);font-size:13px;" id="profile-group-display"></div>
             <div id="profile-role-display" style="font-size:12px;margin-top:2px;"></div>
           </div>
@@ -293,6 +325,8 @@
     <button class="btn btn-secondary" onclick="openEditProfileModal()">Edit Profile</button>
     <br/><br/>
     <button class="btn btn-danger" onclick="leaveGroup()">Leave Group</button>
+    <br/><br/>
+    <button class="btn btn-danger" onclick="signOut()">Sign Out</button>
   </div>
 
   <!-- ══ BOTTOM NAV ══ -->
@@ -305,7 +339,7 @@
       <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
       Schedule
     </button>
-    <button class="nav-btn" id="nav-members-btn" onclick="navTo('screen-members', this)">
+    <button class="nav-btn" onclick="navTo('screen-members', this)">
       <div class="nav-dot" id="nav-pending-dot"></div>
       <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.85"/></svg>
       Members
@@ -377,7 +411,7 @@
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title">Edit Profile</div>
-    <div class="field"><label>Your Name</label><input type="text" id="edit-name" /></div>
+    <div class="field"><label>Display Name</label><input type="text" id="edit-name" /></div>
     <div class="field">
       <label>Do you have a car?</label>
       <select id="edit-hascar"><option value="no">No — I need lifts</option><option value="yes">Yes — I can give lifts</option></select>
@@ -399,6 +433,10 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import {
+    getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+    sendPasswordResetEmail, onAuthStateChanged, signOut as fbSignOut, updateProfile
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import {
     getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc,
     onSnapshot, query, where, serverTimestamp, arrayUnion, arrayRemove
   } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -412,16 +450,19 @@
     appId: "1:397913552950:web:5a149e04bdae2eb15ac097"
   };
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+  const firebaseApp = initializeApp(firebaseConfig);
+  const auth = getAuth(firebaseApp);
+  const db = getFirestore(firebaseApp);
 
   // ══ STATE ══
-  let currentUser = null;   // { name, groupId, groupName, hasCar, seats, isAdmin, status }
+  let authUser = null;      // Firebase auth user
+  let profile = null;       // { name, groupId, groupName, hasCar, seats, isAdmin, status }
   let groupMembers = [];
   let pendingMembers = [];
   let rides = [];
   let schedule = { enabled:false, days:[], time:'07:30', destination:'', awayDates:{}, driverQueue:[] };
   let unsubscribers = [];
+  let inviteCode = '';
 
   // ══ HELPERS ══
   const COLORS = ['#1a3a5c','#b45309','#166534','#7c3aed','#b91c1c','#0369a1'];
@@ -434,17 +475,20 @@
   function formatDate(s) { return new Date(s+'T12:00:00').toLocaleDateString('en-ZA',{weekday:'short',day:'numeric',month:'short'}); }
   function generateCode() { return Math.random().toString(36).substring(2,8).toUpperCase(); }
 
-  // ══ LOCAL STORAGE ══
-  function saveLocal() { localStorage.setItem('ridesync_user_v3', JSON.stringify(currentUser)); }
-  function loadLocal() { const d=localStorage.getItem('ridesync_user_v3'); if(d) currentUser=JSON.parse(d); }
+  function showError(id, msg) {
+    const el = document.getElementById(id);
+    el.textContent = msg; el.style.display = 'block';
+    setTimeout(() => el.style.display='none', 5000);
+  }
 
   // ══ FIRESTORE REFS ══
+  const usersCol = collection(db, 'users');
   function groupDoc(gid) { return doc(db,'groups',gid); }
   function membersCol(gid) { return collection(db,'groups',gid,'members'); }
   function ridesCol(gid) { return collection(db,'groups',gid,'rides'); }
   function scheduleDoc(gid) { return doc(db,'groups',gid,'config','schedule'); }
 
-  // ══ WINDOW FUNCTIONS (early) ══
+  // ══ EARLY WINDOW FUNCTIONS ══
   window.showScreen = function(id) {
     document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
@@ -453,132 +497,191 @@
     window.showScreen(screenId);
     document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
-    if (screenId==='screen-schedule') renderSchedule();
-    if (screenId==='screen-members') renderMembers();
-    if (screenId==='screen-profile') renderProfile();
+    if(screenId==='screen-schedule') renderSchedule();
+    if(screenId==='screen-members') renderMembers();
+    if(screenId==='screen-profile') renderProfile();
   };
   window.closeModal = function(id) { document.getElementById(id).classList.remove('open'); };
 
   // ══ INIT ══
-  loadLocal();
   document.getElementById('today-date').textContent = new Date().toLocaleDateString('en-ZA',{weekday:'long',day:'numeric',month:'long'});
 
-  // Seat field toggles
-  ['create','join','edit'].forEach(prefix => {
-    const sel = document.getElementById(prefix+'-hascar');
-    if (sel) sel.addEventListener('change', function() {
-      const f = document.getElementById(prefix+'-seat-field');
-      if (f) f.style.display = this.value==='yes' ? 'block' : 'none';
+  ['create','join','edit'].forEach(p => {
+    const sel = document.getElementById(p+'-hascar');
+    if(sel) sel.addEventListener('change', function() {
+      const f = document.getElementById(p+'-seat-field');
+      if(f) f.style.display = this.value==='yes'?'block':'none';
     });
   });
-
-  document.querySelectorAll('.day-chip').forEach(chip => {
-    chip.addEventListener('click', ()=>chip.classList.toggle('selected'));
+  document.querySelectorAll('.day-chip').forEach(chip=>{
+    chip.addEventListener('click',()=>chip.classList.toggle('selected'));
   });
 
-  // Check for invite link param
+  // Check for invite link
   const urlParams = new URLSearchParams(window.location.search);
-  const inviteCode = urlParams.get('invite');
-  if (inviteCode) {
-    document.getElementById('join-code').value = inviteCode.toUpperCase();
-  }
+  const urlInvite = urlParams.get('invite');
+  if(urlInvite) document.getElementById('join-code').value = urlInvite.toUpperCase();
 
-  if (currentUser) {
-    if (currentUser.status === 'pending') {
-      document.getElementById('loading-overlay').style.display = 'none';
-      document.getElementById('pending-group-name').textContent = currentUser.groupName;
-      window.showScreen('screen-pending');
+  // ══ AUTH STATE OBSERVER ══
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      authUser = user;
+      // Load user profile from Firestore
+      const snap = await getDoc(doc(usersCol, user.uid));
+      if (snap.exists()) {
+        profile = snap.data();
+        if (profile.status === 'pending') {
+          document.getElementById('loading-overlay').style.display = 'none';
+          document.getElementById('pending-group-name').textContent = profile.groupName;
+          window.showScreen('screen-pending');
+        } else if (profile.groupId) {
+          startApp();
+        } else {
+          document.getElementById('loading-overlay').style.display = 'none';
+          window.showScreen('screen-onboard');
+        }
+      } else {
+        // Auth exists but no profile yet — go to onboard
+        document.getElementById('loading-overlay').style.display = 'none';
+        window.showScreen('screen-onboard');
+      }
     } else {
-      startApp();
+      authUser = null; profile = null;
+      document.getElementById('loading-overlay').style.display = 'none';
+      window.showScreen('screen-home');
     }
-  } else {
-    document.getElementById('loading-overlay').style.display = 'none';
-    window.showScreen('screen-home');
-  }
+  });
+
+  // ══ AUTH FUNCTIONS ══
+  window.signUp = async function() {
+    const name = document.getElementById('signup-name').value.trim();
+    const email = document.getElementById('signup-email').value.trim();
+    const password = document.getElementById('signup-password').value;
+    const confirm = document.getElementById('signup-confirm').value;
+    if(!name||!email||!password) { showError('signup-error','Please fill in all fields'); return; }
+    if(password !== confirm) { showError('signup-error','Passwords do not match'); return; }
+    if(password.length < 6) { showError('signup-error','Password must be at least 6 characters'); return; }
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(cred.user, { displayName: name });
+      // Save base user doc (no group yet)
+      await setDoc(doc(usersCol, cred.user.uid), { name, email, uid: cred.user.uid, createdAt: serverTimestamp() });
+      showToast('Account created! 🎉');
+      // onAuthStateChanged will fire and handle routing
+    } catch(e) {
+      const msgs = {
+        'auth/email-already-in-use': 'An account with this email already exists.',
+        'auth/invalid-email': 'Please enter a valid email address.',
+        'auth/weak-password': 'Password is too weak.'
+      };
+      showError('signup-error', msgs[e.code] || e.message);
+    }
+  };
+
+  window.signIn = async function() {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    if(!email||!password) { showError('login-error','Please enter your email and password'); return; }
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      // onAuthStateChanged handles routing
+    } catch(e) {
+      const msgs = {
+        'auth/user-not-found': 'No account found with this email.',
+        'auth/wrong-password': 'Incorrect password.',
+        'auth/invalid-credential': 'Incorrect email or password.',
+        'auth/too-many-requests': 'Too many attempts. Please try again later.'
+      };
+      showError('login-error', msgs[e.code] || 'Sign in failed. Please try again.');
+    }
+  };
+
+  window.resetPassword = async function() {
+    const email = document.getElementById('forgot-email').value.trim();
+    if(!email) { showError('forgot-error','Please enter your email'); return; }
+    try {
+      await sendPasswordResetEmail(auth, email);
+      showToast('Reset email sent! Check your inbox.');
+      window.showScreen('screen-login');
+    } catch(e) {
+      showError('forgot-error','Could not send reset email. Check the address and try again.');
+    }
+  };
+
+  window.signOut = async function() {
+    unsubscribers.forEach(u=>u()); unsubscribers=[];
+    await fbSignOut(auth);
+    document.getElementById('bottom-nav').style.display='none';
+    showToast('Signed out');
+  };
 
   // ══ CREATE GROUP ══
   window.createGroup = async function() {
-    const name = document.getElementById('create-name').value.trim();
     const groupName = document.getElementById('create-group').value.trim();
     const hasCar = document.getElementById('create-hascar').value;
     const seats = parseInt(document.getElementById('create-seats').value)||0;
-    if (!name||!groupName) { showToast('Please fill in all fields'); return; }
-
+    if(!groupName) { showToast('Please enter a group name'); return; }
     showToast('Creating group…');
     const groupId = generateCode();
-    const inviteCode = generateCode();
+    inviteCode = generateCode();
+    const name = authUser.displayName || 'User';
 
-    // Create group document
-    await setDoc(doc(db,'groups',groupId), {
-      name: groupName,
-      inviteCode,
-      createdAt: serverTimestamp(),
-      adminName: name
+    await setDoc(doc(db,'groups',groupId), { name:groupName, inviteCode, createdAt:serverTimestamp(), adminUid:authUser.uid });
+    await setDoc(doc(membersCol(groupId), authUser.uid), {
+      uid: authUser.uid, name, hasCar, seats:hasCar==='yes'?seats:0,
+      isAdmin:true, status:'approved', joinedAt:serverTimestamp()
     });
+    await updateDoc(doc(usersCol, authUser.uid), { groupId, groupName, hasCar, seats:hasCar==='yes'?seats:0, isAdmin:true, status:'approved' });
 
-    // Add creator as approved admin member
-    await setDoc(doc(membersCol(groupId), name), {
-      name, hasCar, seats: hasCar==='yes' ? seats : 0,
-      isAdmin: true, status: 'approved', joinedAt: serverTimestamp()
-    });
-
-    currentUser = { name, groupId, groupName, hasCar, seats: hasCar==='yes'?seats:0, isAdmin:true, status:'approved' };
-    saveLocal();
+    profile = { ...profile, groupId, groupName, hasCar, seats:hasCar==='yes'?seats:0, isAdmin:true, status:'approved' };
     startApp();
     showToast(`Group "${groupName}" created! 🎉`);
   };
 
   // ══ JOIN GROUP ══
   window.requestJoinGroup = async function() {
-    const name = document.getElementById('join-name').value.trim();
     const code = document.getElementById('join-code').value.trim().toUpperCase();
     const hasCar = document.getElementById('join-hascar').value;
     const seats = parseInt(document.getElementById('join-seats').value)||0;
-    if (!name||!code) { showToast('Please fill in all fields'); return; }
-
+    if(!code) { showToast('Please enter an invite code'); return; }
     showToast('Looking up group…');
 
-    // Find group by invite code
     const groupsSnap = await getDocs(query(collection(db,'groups'), where('inviteCode','==',code)));
-    if (groupsSnap.empty) { showToast('Group not found — check the code'); return; }
+    if(groupsSnap.empty) { showToast('Group not found — check the code'); return; }
 
     const groupData = groupsSnap.docs[0];
     const groupId = groupData.id;
     const groupName = groupData.data().name;
+    const name = authUser.displayName || 'User';
 
-    // Check if already a member
-    const existingMember = await getDoc(doc(membersCol(groupId), name));
-    if (existingMember.exists()) {
-      const memberData = existingMember.data();
-      if (memberData.status === 'approved') {
-        currentUser = { name, groupId, groupName, hasCar: memberData.hasCar, seats: memberData.seats, isAdmin: memberData.isAdmin||false, status:'approved' };
-        saveLocal();
-        startApp();
-        return;
-      }
+    // Check if already approved member
+    const existingSnap = await getDoc(doc(membersCol(groupId), authUser.uid));
+    if(existingSnap.exists() && existingSnap.data().status==='approved') {
+      const m = existingSnap.data();
+      await updateDoc(doc(usersCol, authUser.uid), { groupId, groupName, hasCar:m.hasCar, seats:m.seats, isAdmin:m.isAdmin||false, status:'approved' });
+      profile = { ...profile, groupId, groupName, hasCar:m.hasCar, seats:m.seats, isAdmin:m.isAdmin||false, status:'approved' };
+      startApp(); return;
     }
 
-    // Add as pending member
-    await setDoc(doc(membersCol(groupId), name), {
-      name, hasCar, seats: hasCar==='yes'?seats:0,
-      isAdmin: false, status: 'pending', requestedAt: serverTimestamp()
+    await setDoc(doc(membersCol(groupId), authUser.uid), {
+      uid:authUser.uid, name, hasCar, seats:hasCar==='yes'?seats:0,
+      isAdmin:false, status:'pending', requestedAt:serverTimestamp()
     });
+    await updateDoc(doc(usersCol, authUser.uid), { groupId, groupName, hasCar, seats:hasCar==='yes'?seats:0, isAdmin:false, status:'pending' });
 
-    currentUser = { name, groupId, groupName, hasCar, seats: hasCar==='yes'?seats:0, isAdmin:false, status:'pending' };
-    saveLocal();
-    document.getElementById('loading-overlay').style.display = 'none';
+    profile = { ...profile, groupId, groupName, status:'pending' };
     document.getElementById('pending-group-name').textContent = groupName;
     window.showScreen('screen-pending');
     showToast('Join request sent!');
   };
 
   window.checkApprovalStatus = async function() {
-    if (!currentUser) return;
-    const snap = await getDoc(doc(membersCol(currentUser.groupId), currentUser.name));
-    if (snap.exists() && snap.data().status === 'approved') {
-      currentUser.status = 'approved';
-      currentUser.isAdmin = snap.data().isAdmin || false;
-      saveLocal();
+    if(!authUser||!profile) return;
+    const snap = await getDoc(doc(membersCol(profile.groupId), authUser.uid));
+    if(snap.exists() && snap.data().status==='approved') {
+      const m = snap.data();
+      await updateDoc(doc(usersCol, authUser.uid), { status:'approved', isAdmin:m.isAdmin||false });
+      profile = { ...profile, status:'approved', isAdmin:m.isAdmin||false, hasCar:m.hasCar, seats:m.seats };
       startApp();
     } else {
       showToast('Still pending — check back soon');
@@ -586,10 +689,12 @@
   };
 
   window.cancelJoinRequest = async function() {
-    if (!currentUser) return;
-    await deleteDoc(doc(membersCol(currentUser.groupId), currentUser.name));
-    localStorage.removeItem('ridesync_user_v3');
-    location.reload();
+    if(!authUser||!profile) return;
+    await deleteDoc(doc(membersCol(profile.groupId), authUser.uid));
+    await updateDoc(doc(usersCol, authUser.uid), { groupId:null, groupName:null, status:null });
+    profile.groupId = null; profile.status = null;
+    window.showScreen('screen-onboard');
+    showToast('Request cancelled');
   };
 
   // ══ START APP ══
@@ -603,75 +708,72 @@
   }
 
   function startListeners() {
-    // Stop old listeners
-    unsubscribers.forEach(u=>u());
-    unsubscribers = [];
-    const gid = currentUser.groupId;
+    unsubscribers.forEach(u=>u()); unsubscribers=[];
+    const gid = profile.groupId;
 
-    // Members (approved + pending)
     unsubscribers.push(onSnapshot(membersCol(gid), snap => {
       groupMembers = snap.docs.filter(d=>d.data().status==='approved').map(d=>({id:d.id,...d.data()}));
       pendingMembers = snap.docs.filter(d=>d.data().status==='pending').map(d=>({id:d.id,...d.data()}));
       renderMembers();
       syncDriverQueue();
-      // Show dot if pending
-      const isDriver = currentUser.hasCar === 'yes';
       const dot = document.getElementById('nav-pending-dot');
-      if (dot) dot.classList.toggle('show', isDriver && pendingMembers.length > 0);
+      if(dot) dot.classList.toggle('show', profile.hasCar==='yes' && pendingMembers.length>0);
     }));
 
-    // Today's rides
     unsubscribers.push(onSnapshot(query(ridesCol(gid), where('date','==',todayKey())), snap => {
       rides = snap.docs.map(d=>({id:d.id,...d.data()}));
       renderToday();
     }));
 
-    // Schedule
     unsubscribers.push(onSnapshot(scheduleDoc(gid), snap => {
-      if (snap.exists()) {
+      if(snap.exists()) {
         schedule = {...schedule,...snap.data()};
-        if (!schedule.awayDates) schedule.awayDates={};
-        if (!schedule.driverQueue) schedule.driverQueue=[];
+        if(!schedule.awayDates) schedule.awayDates={};
+        if(!schedule.driverQueue) schedule.driverQueue=[];
       }
       renderSchedule();
     }));
+
+    // Load invite code
+    getDoc(groupDoc(gid)).then(snap => {
+      if(snap.exists()) {
+        inviteCode = snap.data().inviteCode;
+        document.getElementById('invite-code-display').textContent = inviteCode;
+      }
+    });
   }
 
   // ══ TODAY ══
   function renderTodayHeader() {
-    if (!currentUser) return;
-    document.getElementById('today-group-badge').textContent = currentUser.groupName;
-    document.getElementById('driver-cta').style.display = currentUser.hasCar==='yes' ? 'block' : 'none';
+    if(!profile) return;
+    document.getElementById('today-group-badge').textContent = profile.groupName;
+    document.getElementById('driver-cta').style.display = profile.hasCar==='yes'?'block':'none';
   }
 
   function renderToday() {
     const list = document.getElementById('rides-list');
-    if (rides.length===0) {
-      list.innerHTML = `<div class="empty"><div class="empty-icon">🛣️</div><p>No rides posted yet for today.<br/>Check back soon or offer yours!</p></div>`;
+    if(rides.length===0) {
+      list.innerHTML=`<div class="empty"><div class="empty-icon">🛣️</div><p>No rides posted yet for today.<br/>Check back soon or offer yours!</p></div>`;
       return;
     }
-    const myName = currentUser.name;
+    const myName = profile.name;
     list.innerHTML = rides.map(ride => {
       const taken=(ride.passengers||[]).length, total=ride.totalSeats, full=taken>=total;
       const iAmIn=(ride.passengers||[]).includes(myName);
       const iAmDriver=ride.driverName===myName;
       const iAmOut=(ride.notJoining||[]).includes(myName);
-
-      const seatsHTML = Array.from({length:total},(_,i)=>{
+      const seatsHTML=Array.from({length:total},(_,i)=>{
         const p=(ride.passengers||[])[i];
         const cls=p?(p===myName?'seat mine':'seat taken'):'seat open';
         const click=(!p&&!iAmIn&&!iAmDriver&&!iAmOut&&!full)?`onclick="claimSeat('${ride.id}')"` :'';
         return `<div class="${cls}" title="${p||'Available'}" ${click}>${p?'👤':'＋'}</div>`;
       }).join('');
-
-      const notJoiningHTML=(ride.notJoining||[]).length>0?`<div style="margin-top:10px;font-size:12px;color:var(--muted);">Not joining: ${(ride.notJoining||[]).join(', ')}</div>`:'';
-
-      let actionsHTML='';
-      if(iAmDriver) actionsHTML=`<div style="margin-top:12px;"><button class="btn btn-danger btn-sm" onclick="cancelRide('${ride.id}')">Cancel this ride</button></div>`;
-      else if(iAmIn) actionsHTML=`<div style="margin-top:12px;"><button class="btn btn-danger btn-sm" onclick="cancelSeat('${ride.id}')">Cancel my seat</button></div>`;
-      else if(iAmOut) actionsHTML=`<div style="margin-top:12px;display:flex;align-items:center;gap:10px;"><span style="font-size:13px;color:var(--muted);">🚫 Not joining today</span><button class="btn btn-secondary btn-sm" onclick="undoNotJoining('${ride.id}')">Undo</button></div>`;
-      else actionsHTML=`<div style="margin-top:12px;display:flex;gap:8px;">${!full?`<button class="btn btn-primary btn-sm" onclick="claimSeat('${ride.id}')">+ Join ride</button>`:''}<button class="btn btn-secondary btn-sm" onclick="markNotJoining('${ride.id}')">Not joining today</button></div>`;
-
+      const notJoinHTML=(ride.notJoining||[]).length>0?`<div style="margin-top:10px;font-size:12px;color:var(--muted);">Not joining: ${(ride.notJoining||[]).join(', ')}</div>`:'';
+      let act='';
+      if(iAmDriver) act=`<div style="margin-top:12px;"><button class="btn btn-danger btn-sm" onclick="cancelRide('${ride.id}')">Cancel this ride</button></div>`;
+      else if(iAmIn) act=`<div style="margin-top:12px;"><button class="btn btn-danger btn-sm" onclick="cancelSeat('${ride.id}')">Cancel my seat</button></div>`;
+      else if(iAmOut) act=`<div style="margin-top:12px;display:flex;align-items:center;gap:10px;"><span style="font-size:13px;color:var(--muted);">🚫 Not joining today</span><button class="btn btn-secondary btn-sm" onclick="undoNotJoining('${ride.id}')">Undo</button></div>`;
+      else act=`<div style="margin-top:12px;display:flex;gap:8px;">${!full?`<button class="btn btn-primary btn-sm" onclick="claimSeat('${ride.id}')">+ Join ride</button>`:''}<button class="btn btn-secondary btn-sm" onclick="markNotJoining('${ride.id}')">Not joining today</button></div>`;
       return `<div class="card">
         <div class="card-row" style="margin-bottom:10px;">
           <div style="display:flex;align-items:center;gap:10px;">
@@ -680,228 +782,185 @@
           </div>
           <div class="pill ${full?'red':'green'}">${full?'🔴 Full':`${total-taken} seat${total-taken!==1?'s':''} open`}</div>
         </div>
-        <div class="seats">${seatsHTML}</div>
-        ${notJoiningHTML}${actionsHTML}
+        <div class="seats">${seatsHTML}</div>${notJoinHTML}${act}
       </div>`;
     }).join('');
   }
 
   window.openOfferModal = function() { document.getElementById('modal-offer').classList.add('open'); };
-
   window.postRide = async function() {
     const time=document.getElementById('offer-time').value;
     const destination=document.getElementById('offer-destination').value.trim();
     const note=document.getElementById('offer-note').value.trim();
     if(!time){showToast('Please set a time');return;}
     if(!destination){showToast('Please enter a destination');return;}
-    if(rides.find(r=>r.driverName===currentUser.name)){showToast('You already posted a ride today');closeModal('modal-offer');return;}
-    const id=Date.now().toString();
-    await setDoc(doc(ridesCol(currentUser.groupId),id),{
-      date:todayKey(),driverName:currentUser.name,time,destination,note,
-      totalSeats:currentUser.seats,passengers:[],notJoining:[],createdAt:serverTimestamp()
+    if(rides.find(r=>r.driverName===profile.name)){showToast('You already posted a ride today');closeModal('modal-offer');return;}
+    await setDoc(doc(ridesCol(profile.groupId),Date.now().toString()),{
+      date:todayKey(),driverName:profile.name,time,destination,note,
+      totalSeats:profile.seats,passengers:[],notJoining:[],createdAt:serverTimestamp()
     });
     closeModal('modal-offer');
     document.getElementById('offer-destination').value='';
     document.getElementById('offer-note').value='';
     showToast('Ride posted! 🚗');
   };
-
   window.claimSeat = async function(rideId) {
     const ride=rides.find(r=>r.id===rideId);
     if(!ride||(ride.passengers||[]).length>=ride.totalSeats)return;
-    await updateDoc(doc(ridesCol(currentUser.groupId),rideId),{passengers:arrayUnion(currentUser.name)});
+    await updateDoc(doc(ridesCol(profile.groupId),rideId),{passengers:arrayUnion(profile.name)});
     showToast(`Seat claimed in ${ride.driverName}'s car!`);
   };
-
   window.cancelSeat = async function(rideId) {
-    await updateDoc(doc(ridesCol(currentUser.groupId),rideId),{passengers:arrayRemove(currentUser.name)});
+    await updateDoc(doc(ridesCol(profile.groupId),rideId),{passengers:arrayRemove(profile.name)});
     showToast('Seat cancelled');
   };
-
   window.cancelRide = async function(rideId) {
-    await deleteDoc(doc(ridesCol(currentUser.groupId),rideId));
+    await deleteDoc(doc(ridesCol(profile.groupId),rideId));
     showToast('Ride cancelled');
   };
-
   window.markNotJoining = async function(rideId) {
-    await updateDoc(doc(ridesCol(currentUser.groupId),rideId),{
-      notJoining:arrayUnion(currentUser.name), passengers:arrayRemove(currentUser.name)
-    });
+    await updateDoc(doc(ridesCol(profile.groupId),rideId),{notJoining:arrayUnion(profile.name),passengers:arrayRemove(profile.name)});
     showToast("Noted — you're not joining today");
   };
-
   window.undoNotJoining = async function(rideId) {
-    await updateDoc(doc(ridesCol(currentUser.groupId),rideId),{notJoining:arrayRemove(currentUser.name)});
+    await updateDoc(doc(ridesCol(profile.groupId),rideId),{notJoining:arrayRemove(profile.name)});
     showToast('Response cleared');
   };
 
   // ══ MEMBERS ══
   function renderMembers() {
-    if (!currentUser) return;
-    document.getElementById('members-group-name').textContent = currentUser.groupName;
-
-    // Invite code
-    loadInviteCode();
-
-    // Pending section — visible to drivers only
-    const isDriver = currentUser.hasCar === 'yes';
+    if(!profile) return;
+    document.getElementById('members-group-name').textContent = profile.groupName;
+    const isDriver = profile.hasCar==='yes';
     const pendingSection = document.getElementById('pending-section');
-    if (isDriver && pendingMembers.length > 0) {
-      pendingSection.style.display = 'block';
-      document.getElementById('pending-count').textContent = pendingMembers.length;
-      document.getElementById('pending-list').innerHTML = pendingMembers.map(m => `
+    if(isDriver && pendingMembers.length>0) {
+      pendingSection.style.display='block';
+      document.getElementById('pending-count').textContent=pendingMembers.length;
+      document.getElementById('pending-list').innerHTML=pendingMembers.map(m=>`
         <div class="card" style="border-left:4px solid var(--warning);">
           <div class="card-row">
             <div style="display:flex;align-items:center;gap:12px;">
               <div class="avatar" style="background:${avatarColor(m.name)};color:#fff;">${initials(m.name)}</div>
-              <div>
-                <div class="card-title">${m.name}</div>
-                <div class="card-meta">${m.hasCar==='yes'?`🚗 Driver · ${m.seats} seat${m.seats!==1?'s':''}`:'🚶 Needs a lift'}</div>
-              </div>
+              <div><div class="card-title">${m.name}</div><div class="card-meta">${m.hasCar==='yes'?`🚗 Driver · ${m.seats} seat${m.seats!==1?'s':''}`:'🚶 Needs a lift'}</div></div>
             </div>
             <div style="display:flex;gap:6px;">
-              <button class="btn btn-success btn-sm" onclick="approveMember('${m.name}')">✓</button>
-              <button class="btn btn-danger btn-sm" onclick="rejectMember('${m.name}')">✕</button>
+              <button class="btn btn-success btn-sm" onclick="approveMember('${m.id}')">✓</button>
+              <button class="btn btn-danger btn-sm" onclick="rejectMember('${m.id}','${m.name}')">✕</button>
             </div>
           </div>
         </div>`).join('');
-    } else {
-      pendingSection.style.display = 'none';
-    }
+    } else { pendingSection.style.display='none'; }
 
-    // Approved members list
-    const list = document.getElementById('members-list');
-    if (groupMembers.length === 0) {
-      list.innerHTML = `<div class="empty"><div class="empty-icon">👥</div><p>No members yet.</p></div>`;
-      return;
-    }
-    list.innerHTML = groupMembers.map(m => `
+    const list=document.getElementById('members-list');
+    if(groupMembers.length===0){list.innerHTML=`<div class="empty"><div class="empty-icon">👥</div><p>No members yet.</p></div>`;return;}
+    list.innerHTML=groupMembers.map(m=>`
       <div class="card">
         <div class="card-row">
           <div style="display:flex;align-items:center;gap:12px;">
             <div class="avatar" style="background:${avatarColor(m.name)};color:#fff;">${initials(m.name)}</div>
             <div>
-              <div class="card-title">${m.name}${m.name===currentUser.name?' <span style="font-size:11px;color:var(--accent);">(you)</span>':''}${m.isAdmin?' <span style="font-size:11px;color:var(--warning);">admin</span>':''}</div>
+              <div class="card-title">${m.name}${m.uid===authUser.uid?' <span style="font-size:11px;color:var(--accent);">(you)</span>':''}${m.isAdmin?' <span style="font-size:11px;color:var(--warning);">admin</span>':''}</div>
               <div class="card-meta">${m.hasCar==='yes'?`🚗 Driver · ${m.seats} seat${m.seats!==1?'s':''}`:'🚶 Needs a lift'}</div>
             </div>
           </div>
-          ${(currentUser.hasCar==='yes') && m.name!==currentUser.name ? `<button class="btn btn-danger btn-sm" onclick="removeMember('${m.name}')">Remove</button>` : ''}
+          ${isDriver && m.uid!==authUser.uid?`<button class="btn btn-danger btn-sm" onclick="removeMember('${m.id}','${m.name}')">Remove</button>`:''}
         </div>
       </div>`).join('');
   }
 
-  async function loadInviteCode() {
-    try {
-      const snap = await getDoc(groupDoc(currentUser.groupId));
-      if (snap.exists()) {
-        document.getElementById('invite-code-display').textContent = snap.data().inviteCode;
-      }
-    } catch(e) {}
-  }
-
   window.copyCode = async function() {
-    const code = document.getElementById('invite-code-display').textContent;
-    await navigator.clipboard.writeText(code);
+    await navigator.clipboard.writeText(inviteCode);
     showToast('Code copied!');
   };
-
   window.copyLink = async function() {
-    const code = document.getElementById('invite-code-display').textContent;
-    const link = `${window.location.origin}${window.location.pathname}?invite=${code}`;
+    const link=`${window.location.origin}${window.location.pathname}?invite=${inviteCode}`;
     await navigator.clipboard.writeText(link);
     showToast('Invite link copied!');
   };
-
-  window.approveMember = async function(name) {
-    await updateDoc(doc(membersCol(currentUser.groupId), name), { status: 'approved' });
-    showToast(`${name} approved! ✓`);
+  window.approveMember = async function(uid) {
+    await updateDoc(doc(membersCol(profile.groupId),uid),{status:'approved'});
+    await updateDoc(doc(usersCol,uid),{status:'approved'});
+    showToast('Member approved ✓');
   };
-
-  window.rejectMember = async function(name) {
-    if (confirm(`Remove ${name}'s request?`)) {
-      await deleteDoc(doc(membersCol(currentUser.groupId), name));
+  window.rejectMember = async function(uid, name) {
+    if(confirm(`Remove ${name}'s request?`)) {
+      await deleteDoc(doc(membersCol(profile.groupId),uid));
+      await updateDoc(doc(usersCol,uid),{groupId:null,groupName:null,status:null});
       showToast(`${name} removed`);
     }
   };
-
-  window.removeMember = async function(name) {
-    if (confirm(`Remove ${name} from the group?`)) {
-      await deleteDoc(doc(membersCol(currentUser.groupId), name));
+  window.removeMember = async function(uid, name) {
+    if(confirm(`Remove ${name} from the group?`)) {
+      await deleteDoc(doc(membersCol(profile.groupId),uid));
+      await updateDoc(doc(usersCol,uid),{groupId:null,groupName:null,status:null});
       showToast(`${name} removed`);
     }
   };
 
   // ══ PROFILE ══
   function renderProfile() {
-    if (!currentUser) return;
-    const u = currentUser;
-    const av = document.getElementById('profile-avatar');
-    av.textContent = initials(u.name); av.style.background = avatarColor(u.name); av.style.color = '#fff';
-    document.getElementById('profile-name-display').textContent = u.name;
-    document.getElementById('profile-group-display').textContent = u.groupName;
-    document.getElementById('profile-role-display').innerHTML = u.isAdmin
-      ? '<span style="color:var(--warning);font-weight:600;">⭐ Admin</span>'
-      : '<span style="color:var(--muted);">Member</span>';
-    document.getElementById('profile-car-display').textContent = u.hasCar==='yes' ? '✅ Yes' : '❌ No';
-    document.getElementById('profile-seats-display').textContent = u.hasCar==='yes' ? u.seats : '—';
-    renderTodayHeader();
+    if(!profile||!authUser) return;
+    const av=document.getElementById('profile-avatar');
+    av.textContent=initials(profile.name); av.style.background=avatarColor(profile.name); av.style.color='#fff';
+    document.getElementById('profile-name-display').textContent=profile.name;
+    document.getElementById('profile-email-display').textContent=authUser.email;
+    document.getElementById('profile-group-display').textContent=profile.groupName||'No group';
+    document.getElementById('profile-role-display').innerHTML=profile.isAdmin
+      ?'<span style="color:var(--warning);font-weight:600;">⭐ Admin</span>'
+      :'<span style="color:var(--muted);">Member</span>';
+    document.getElementById('profile-car-display').textContent=profile.hasCar==='yes'?'✅ Yes':'❌ No';
+    document.getElementById('profile-seats-display').textContent=profile.hasCar==='yes'?profile.seats:'—';
   }
 
   window.openEditProfileModal = function() {
-    document.getElementById('edit-name').value = currentUser.name;
-    document.getElementById('edit-hascar').value = currentUser.hasCar;
-    if (currentUser.hasCar==='yes') {
-      document.getElementById('edit-seat-field').style.display='block';
-      document.getElementById('edit-seats').value = currentUser.seats;
-    }
+    document.getElementById('edit-name').value=profile.name;
+    document.getElementById('edit-hascar').value=profile.hasCar;
+    if(profile.hasCar==='yes'){document.getElementById('edit-seat-field').style.display='block';document.getElementById('edit-seats').value=profile.seats;}
     document.getElementById('modal-edit-profile').classList.add('open');
   };
-
   window.saveEditProfile = async function() {
-    const name = document.getElementById('edit-name').value.trim();
-    const hasCar = document.getElementById('edit-hascar').value;
-    const seats = parseInt(document.getElementById('edit-seats').value)||0;
-    if (!name) { showToast('Please enter your name'); return; }
-    await updateDoc(doc(membersCol(currentUser.groupId), currentUser.name), {
-      name, hasCar, seats: hasCar==='yes'?seats:0
-    });
-    currentUser.name=name; currentUser.hasCar=hasCar; currentUser.seats=hasCar==='yes'?seats:0;
-    saveLocal();
+    const name=document.getElementById('edit-name').value.trim();
+    const hasCar=document.getElementById('edit-hascar').value;
+    const seats=parseInt(document.getElementById('edit-seats').value)||0;
+    if(!name){showToast('Please enter your name');return;}
+    await updateDoc(doc(membersCol(profile.groupId),authUser.uid),{name,hasCar,seats:hasCar==='yes'?seats:0});
+    await updateDoc(doc(usersCol,authUser.uid),{name,hasCar,seats:hasCar==='yes'?seats:0});
+    await updateProfile(authUser,{displayName:name});
+    profile.name=name; profile.hasCar=hasCar; profile.seats=hasCar==='yes'?seats:0;
     closeModal('modal-edit-profile');
-    renderProfile();
+    renderProfile(); renderTodayHeader();
     showToast('Profile updated!');
   };
-
   window.leaveGroup = async function() {
-    if (confirm('Are you sure you want to leave this group?')) {
-      await deleteDoc(doc(membersCol(currentUser.groupId), currentUser.name));
-      localStorage.removeItem('ridesync_user_v3');
-      location.reload();
+    if(confirm('Are you sure you want to leave this group?')) {
+      await deleteDoc(doc(membersCol(profile.groupId),authUser.uid));
+      await updateDoc(doc(usersCol,authUser.uid),{groupId:null,groupName:null,status:null,isAdmin:false});
+      unsubscribers.forEach(u=>u()); unsubscribers=[];
+      document.getElementById('bottom-nav').style.display='none';
+      profile.groupId=null; profile.status=null;
+      window.showScreen('screen-onboard');
+      showToast('You have left the group');
     }
   };
 
   // ══ SCHEDULE ══
   function syncDriverQueue() {
-    const drivers = groupMembers.filter(m=>m.hasCar==='yes').map(m=>m.name);
-    let q = schedule.driverQueue||[];
-    drivers.forEach(d=>{ if(!q.includes(d)) q.push(d); });
-    q = q.filter(n=>drivers.includes(n));
-    schedule.driverQueue = q;
+    const drivers=groupMembers.filter(m=>m.hasCar==='yes').map(m=>m.name);
+    let q=schedule.driverQueue||[];
+    drivers.forEach(d=>{if(!q.includes(d))q.push(d);});
+    q=q.filter(n=>drivers.includes(n));
+    schedule.driverQueue=q;
   }
-
   function buildSchedule(weeksAhead) {
     const sc=schedule;
-    if(!sc.enabled||!sc.days||sc.days.length===0||!sc.driverQueue||sc.driverQueue.length===0) return [];
-    const result=[], today=todayKey(), end=addDays(today,weeksAhead*7);
-    let current=today, queueIndex=0;
-    while(current<=end) {
-      if(sc.days.map(Number).includes(dayOfWeek(current))) {
+    if(!sc.enabled||!sc.days||sc.days.length===0||!sc.driverQueue||sc.driverQueue.length===0)return[];
+    const result=[],today=todayKey(),end=addDays(today,weeksAhead*7);
+    let current=today,queueIndex=0;
+    while(current<=end){
+      if(sc.days.map(Number).includes(dayOfWeek(current))){
         const awayOnDate=sc.awayDates[current]||[];
         let found=null;
-        for(let i=0;i<sc.driverQueue.length;i++) {
-          const c=sc.driverQueue[(queueIndex+i)%sc.driverQueue.length];
-          if(!awayOnDate.includes(c)){found=c;break;}
-        }
+        for(let i=0;i<sc.driverQueue.length;i++){const c=sc.driverQueue[(queueIndex+i)%sc.driverQueue.length];if(!awayOnDate.includes(c)){found=c;break;}}
         result.push({date:current,driver:found||'—',noDriver:!found,time:sc.time,destination:sc.destination,awayOnDate});
         queueIndex=(queueIndex+1)%sc.driverQueue.length;
       }
@@ -909,33 +968,27 @@
     }
     return result;
   }
-
   function renderSchedule() {
     const sc=schedule;
-    const noConfig=document.getElementById('schedule-no-config');
-    const content=document.getElementById('schedule-content');
+    const noConfig=document.getElementById('schedule-no-config'),content=document.getElementById('schedule-content');
     if(!sc.enabled||!sc.days||sc.days.length===0){noConfig.style.display='block';content.style.display='none';return;}
     noConfig.style.display='none';content.style.display='block';
-    const entries=buildSchedule(4), myName=currentUser.name;
+    const entries=buildSchedule(4),myName=profile?profile.name:'';
     const myNext=entries.find(e=>e.driver===myName&&e.date>=todayKey());
     const myNextEl=document.getElementById('my-next-drive');
-    if(myNext&&currentUser.hasCar==='yes') {
+    if(myNext&&profile&&profile.hasCar==='yes'){
       const alreadyAway=(sc.awayDates[myNext.date]||[]).includes(myName);
       myNextEl.innerHTML=`<div class="card" style="border-left:4px solid var(--accent);background:var(--surface2);">
         <div class="card-meta" style="margin-bottom:4px;">Your next scheduled drive</div>
         <div class="card-title">📅 ${formatDate(myNext.date)}</div>
         <div class="card-meta">🕐 ${myNext.time} · 📍 ${myNext.destination}</div>
-        <div style="margin-top:12px;">${alreadyAway
-          ?'<span style="font-size:13px;color:var(--danger);">🏖️ You\'ve marked yourself away</span>'
-          :`<button class="btn btn-warning btn-sm" onclick="openAwayModal('${myNext.date}')">🏖️ Mark me as away</button>`}
-        </div></div>`;
+        <div style="margin-top:12px;">${alreadyAway?'<span style="font-size:13px;color:var(--danger);">🏖️ You\'ve marked yourself away</span>':`<button class="btn btn-warning btn-sm" onclick="openAwayModal('${myNext.date}')">🏖️ Mark me as away</button>`}</div>
+      </div>`;
     } else { myNextEl.innerHTML=''; }
-
     const list=document.getElementById('schedule-list');
     if(entries.length===0){list.innerHTML=`<div class="empty"><div class="empty-icon">📅</div><p>No trips scheduled.</p></div>`;return;}
     list.innerHTML=entries.map(e=>{
-      const isMe=e.driver===myName;
-      const alreadyAway=(sc.awayDates[e.date]||[]).includes(myName);
+      const isMe=e.driver===myName,alreadyAway=(sc.awayDates[e.date]||[]).includes(myName);
       const awayLabel=e.awayOnDate.length>0?`<div style="font-size:12px;color:var(--danger);margin-top:4px;">⚠️ Away: ${e.awayOnDate.join(', ')}</div>`:'';
       return `<div class="sched-card ${isMe?'is-me':''}">
         <div class="sched-date">${e.date===todayKey()?'📍 Today — ':''}${formatDate(e.date)}</div>
@@ -945,8 +998,7 @@
               <span class="avatar" style="width:28px;height:28px;font-size:11px;background:${avatarColor(e.driver)};color:#fff;">${e.noDriver?'?':initials(e.driver)}</span>
               <span>${e.driver}${isMe?' <span style="font-size:12px;color:var(--accent);">(you)</span>':''}</span>
             </div>
-            <div class="sched-meta" style="margin-top:4px;">🕐 ${e.time} · 📍 ${e.destination}</div>
-            ${awayLabel}
+            <div class="sched-meta" style="margin-top:4px;">🕐 ${e.time} · 📍 ${e.destination}</div>${awayLabel}
           </div>
           ${isMe&&e.date>=todayKey()&&!alreadyAway?`<button class="btn btn-warning btn-sm" onclick="openAwayModal('${e.date}')">Away</button>`:''}
           ${isMe&&alreadyAway?`<span style="font-size:12px;color:var(--danger);padding-top:6px;">🏖️ Away</span>`:''}
@@ -954,62 +1006,43 @@
       </div>`;
     }).join('');
   }
-
   window.openScheduleSettingsModal = function() {
     const sc=schedule;
     document.getElementById('sched-auto-toggle').checked=sc.enabled;
     document.getElementById('sched-time').value=sc.time||'07:30';
     document.getElementById('sched-destination').value=sc.destination||'';
-    document.querySelectorAll('.day-chip').forEach(chip=>{
-      chip.classList.toggle('selected',(sc.days||[]).map(Number).includes(parseInt(chip.dataset.day)));
-    });
+    document.querySelectorAll('.day-chip').forEach(chip=>{chip.classList.toggle('selected',(sc.days||[]).map(Number).includes(parseInt(chip.dataset.day)));});
     document.getElementById('modal-schedule-settings').classList.add('open');
   };
-
   window.saveScheduleSettings = async function() {
     const days=[];
     document.querySelectorAll('.day-chip.selected').forEach(chip=>days.push(parseInt(chip.dataset.day)));
     syncDriverQueue();
-    await setDoc(scheduleDoc(currentUser.groupId),{
+    await setDoc(scheduleDoc(profile.groupId),{
       enabled:document.getElementById('sched-auto-toggle').checked,
       time:document.getElementById('sched-time').value,
       destination:document.getElementById('sched-destination').value.trim(),
-      days, driverQueue:schedule.driverQueue, awayDates:schedule.awayDates||{}
+      days,driverQueue:schedule.driverQueue,awayDates:schedule.awayDates||{}
     });
     closeModal('modal-schedule-settings');
     showToast('Schedule saved ✓');
   };
-
-  window.openAwayModal = function(date) {
-    document.getElementById('away-date').value=date||todayKey();
-    document.getElementById('modal-away').classList.add('open');
-  };
-
+  window.openAwayModal = function(date) { document.getElementById('away-date').value=date||todayKey(); document.getElementById('modal-away').classList.add('open'); };
   window.saveAwayDate = async function() {
     const date=document.getElementById('away-date').value;
     if(!date){showToast('Please select a date');return;}
     const awayDates={...(schedule.awayDates||{})};
     if(!awayDates[date])awayDates[date]=[];
-    if(!awayDates[date].includes(currentUser.name))awayDates[date].push(currentUser.name);
-    await updateDoc(scheduleDoc(currentUser.groupId),{awayDates});
+    if(!awayDates[date].includes(profile.name))awayDates[date].push(profile.name);
+    await updateDoc(scheduleDoc(profile.groupId),{awayDates});
     closeModal('modal-away');
     showToast(`Marked away on ${formatDate(date)}`);
   };
 
-  window.loadExistingUser = function() {
-    if(currentUser){
-      if(currentUser.status==='pending'){
-        document.getElementById('pending-group-name').textContent=currentUser.groupName;
-        window.showScreen('screen-pending');
-      } else { startApp(); }
-    } else { showToast('No profile found — please get started'); }
-  };
-
   // ══ MODAL & TOAST ══
   document.querySelectorAll('.modal-overlay').forEach(m=>{
-    m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('open'); });
+    m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});
   });
-
   function showToast(msg) {
     const t=document.getElementById('toast');
     t.textContent=msg; t.classList.add('show');
