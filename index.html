@@ -53,9 +53,14 @@
     .sched-meta { font-size: 13px; color: var(--muted); margin-top: 2px; }
     .seats { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
     .seat { width: 42px; height: 42px; border-radius: 10px; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; transition: all .15s; background: var(--surface2); }
-    .seat.taken { background: var(--surface); border-color: var(--border); cursor: default; opacity: .5; }
+    .seat.taken { background: var(--surface); border-color: var(--border); cursor: default; opacity: .7; }
     .seat.mine { border-color: var(--accent); background: rgba(26,58,92,.1); }
     .seat.open:hover { border-color: var(--accent); transform: scale(1.08); }
+    .passengers-drawer { overflow: hidden; max-height: 0; transition: max-height .3s ease; }
+    .passengers-drawer.open { max-height: 200px; }
+    .passengers-drawer-inner { padding-top: 12px; border-top: 1px solid var(--border); margin-top: 12px; }
+    .passenger-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
+    .passenger-row:not(:last-child) { border-bottom: 1px solid var(--surface2); }
     .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 420px; background: var(--surface); border-top: 1px solid var(--border); display: flex; z-index: 100; }
     .nav-btn { flex: 1; padding: 14px 0 12px; display: flex; flex-direction: column; align-items: center; gap: 4px; background: none; border: none; color: var(--muted); font-family: -apple-system,'SF Pro Text',sans-serif; font-size: 11px; cursor: pointer; transition: color .15s; position: relative; }
     .nav-btn.active { color: var(--accent); }
@@ -88,6 +93,7 @@
     .toggle input:checked + .toggle-slider { background: var(--accent); }
     .toggle input:checked + .toggle-slider:before { transform: translateX(20px); }
     .info-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 16px; }
+    .warning-box { background: rgba(180,83,9,.08); border: 1px solid var(--warning); border-radius: 10px; padding: 12px 14px; font-size: 13px; color: var(--warning); line-height: 1.5; margin-bottom: 16px; }
     .code-box { background: var(--surface2); border: 2px dashed var(--border); border-radius: 12px; padding: 16px; text-align: center; margin-bottom: 16px; }
     .code-text { font-size: 32px; font-weight: 700; letter-spacing: 6px; color: var(--accent); font-family: monospace; }
     .avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
@@ -106,18 +112,32 @@
     .auth-link { text-align: center; font-size: 13px; color: var(--muted); margin-top: 16px; }
     .auth-link a { color: var(--accent); font-weight: 600; cursor: pointer; text-decoration: none; }
     .error-msg { background: rgba(192,57,43,.08); border: 1px solid var(--danger); border-radius: 10px; padding: 10px 14px; font-size: 13px; color: var(--danger); margin-bottom: 16px; display: none; }
+    /* Day-time grid in schedule settings */
+    .day-time-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--surface2); }
+    .day-time-label { font-size: 14px; font-weight: 500; min-width: 48px; }
+    .day-time-input { padding: 8px 10px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; background: var(--surface); color: var(--text); outline: none; width: 120px; }
+    .day-time-input:focus { border-color: var(--accent); }
+    /* Rides date tabs */
+    .date-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 20px; scrollbar-width: none; }
+    .date-tabs::-webkit-scrollbar { display: none; }
+    .date-tab { flex-shrink: 0; padding: 8px 16px; border-radius: 20px; border: 1.5px solid var(--border); background: var(--surface); font-size: 13px; font-weight: 500; cursor: pointer; transition: all .15s; color: var(--muted); white-space: nowrap; }
+    .date-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    /* Capacity warning banner */
+    .capacity-banner { background: rgba(180,83,9,.08); border: 1px solid var(--warning); border-radius: 12px; padding: 14px 16px; margin-bottom: 16px; display: none; }
+    .capacity-banner-title { font-weight: 600; font-size: 14px; color: var(--warning); margin-bottom: 2px; }
+    .capacity-banner-sub { font-size: 13px; color: var(--muted); }
   </style>
 </head>
 <body>
 <div class="app">
 
-  <!-- ══ LOADING ══ -->
+  <!-- LOADING -->
   <div class="loading-overlay" id="loading-overlay">
     <div class="logo-title">RideSync</div>
     <div class="spinner-ring"></div>
   </div>
 
-  <!-- ══ WELCOME ══ -->
+  <!-- WELCOME -->
   <div class="screen" id="screen-home">
     <div class="logo-title">RideSync</div>
     <div class="logo-sub">Coordinate daily carpools at Bethel.</div>
@@ -128,7 +148,7 @@
     </div>
   </div>
 
-  <!-- ══ SIGN UP ══ -->
+  <!-- SIGN UP -->
   <div class="screen" id="screen-signup">
     <div class="header">
       <div><div class="header-title">Create Account</div><div class="header-sub">Set up your RideSync login</div></div>
@@ -144,7 +164,7 @@
     <div class="auth-link">Already have an account? <a onclick="showScreen('screen-login')">Sign in</a></div>
   </div>
 
-  <!-- ══ SIGN IN ══ -->
+  <!-- SIGN IN -->
   <div class="screen" id="screen-login">
     <div class="header">
       <div><div class="header-title">Welcome Back</div><div class="header-sub">Sign in to your account</div></div>
@@ -159,7 +179,7 @@
     <div class="auth-link" style="margin-top:8px;">No account? <a onclick="showScreen('screen-signup')">Create one</a></div>
   </div>
 
-  <!-- ══ FORGOT PASSWORD ══ -->
+  <!-- FORGOT PASSWORD -->
   <div class="screen" id="screen-forgot">
     <div class="header">
       <div><div class="header-title">Reset Password</div><div class="header-sub">We'll send you a reset link</div></div>
@@ -171,7 +191,7 @@
     <button class="btn btn-primary" onclick="resetPassword()">Send Reset Email</button>
   </div>
 
-  <!-- ══ ONBOARDING: CHOOSE PATH ══ -->
+  <!-- ONBOARDING -->
   <div class="screen" id="screen-onboard">
     <div class="header">
       <div><div class="header-title">Join or Create</div><div class="header-sub">How would you like to get started?</div></div>
@@ -192,15 +212,14 @@
     <button class="btn btn-danger btn-sm" style="width:auto;align-self:center;" onclick="signOut()">Sign Out</button>
   </div>
 
-  <!-- ══ CREATE GROUP ══ -->
+  <!-- CREATE GROUP -->
   <div class="screen" id="screen-create-group">
     <div class="header">
       <div><div class="header-title">Create Group</div><div class="header-sub">Set up your carpool group</div></div>
       <button class="btn btn-secondary btn-sm" onclick="showScreen('screen-onboard')">← Back</button>
     </div>
     <div class="field"><label>Group Name</label><input type="text" id="create-group" placeholder="e.g. Bethel Campus" /></div>
-    <div class="field">
-      <label>Do you have a car?</label>
+    <div class="field"><label>Do you have a car?</label>
       <select id="create-hascar"><option value="no">No — I need lifts</option><option value="yes">Yes — I can give lifts</option></select>
     </div>
     <div class="field" id="create-seat-field" style="display:none;">
@@ -211,7 +230,7 @@
     <button class="btn btn-primary" onclick="createGroup()">Create Group →</button>
   </div>
 
-  <!-- ══ JOIN GROUP ══ -->
+  <!-- JOIN GROUP -->
   <div class="screen" id="screen-join-group">
     <div class="header">
       <div><div class="header-title">Join a Group</div><div class="header-sub">Enter your invite code</div></div>
@@ -221,8 +240,7 @@
       <label>Invite Code</label>
       <input type="text" id="join-code" placeholder="e.g. BETH01" style="text-transform:uppercase;letter-spacing:3px;font-size:18px;font-weight:700;" />
     </div>
-    <div class="field">
-      <label>Do you have a car?</label>
+    <div class="field"><label>Do you have a car?</label>
       <select id="join-hascar"><option value="no">No — I need lifts</option><option value="yes">Yes — I can give lifts</option></select>
     </div>
     <div class="field" id="join-seat-field" style="display:none;">
@@ -233,7 +251,7 @@
     <button class="btn btn-primary" onclick="requestJoinGroup()">Request to Join →</button>
   </div>
 
-  <!-- ══ PENDING APPROVAL ══ -->
+  <!-- PENDING -->
   <div class="screen" id="screen-pending">
     <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:16px;text-align:center;">
       <div style="font-size:48px;">⏳</div>
@@ -245,24 +263,31 @@
     </div>
   </div>
 
-  <!-- ══ TODAY ══ -->
+  <!-- TODAY -->
   <div class="screen" id="screen-today">
     <div class="header">
-      <div><div class="header-title">Today's Rides</div><div class="header-sub" id="today-date"></div></div>
+      <div><div class="header-title">Rides</div><div class="header-sub" id="today-date"></div></div>
       <div id="today-group-badge" class="badge"></div>
     </div>
+    <!-- Date tabs -->
+    <div class="date-tabs" id="date-tabs"></div>
     <div id="driver-cta" style="display:none;margin-bottom:20px;">
-      <button class="btn btn-primary" onclick="openOfferModal()">🚗 Offer my car today</button>
+      <button class="btn btn-primary" onclick="openOfferModal()">🚗 Offer my car</button>
     </div>
     <div class="section-title">Available Rides</div>
     <div id="rides-list" class="gap"><div class="spinner"><div class="spinner-ring"></div></div></div>
   </div>
 
-  <!-- ══ SCHEDULE ══ -->
+  <!-- SCHEDULE -->
   <div class="screen" id="screen-schedule">
     <div class="header">
       <div><div class="header-title">Schedule</div><div class="header-sub">Upcoming driver rotation</div></div>
       <button class="btn btn-primary btn-sm" onclick="openScheduleSettingsModal()">⚙ Settings</button>
+    </div>
+    <!-- Capacity warning banner -->
+    <div class="capacity-banner" id="capacity-banner">
+      <div class="capacity-banner-title">⚠️ Capacity Warning</div>
+      <div class="capacity-banner-sub" id="capacity-banner-text"></div>
     </div>
     <div id="schedule-no-config">
       <div class="empty"><div class="empty-icon">📅</div><p>No recurring schedule set up yet.<br/>Tap <strong>Settings</strong> to configure.</p></div>
@@ -274,7 +299,7 @@
     </div>
   </div>
 
-  <!-- ══ MEMBERS ══ -->
+  <!-- MEMBERS -->
   <div class="screen" id="screen-members">
     <div class="header">
       <div><div class="header-title">Members</div><div class="header-sub" id="members-group-name"></div></div>
@@ -298,11 +323,9 @@
     <div id="members-list" class="gap"><div class="spinner"><div class="spinner-ring"></div></div></div>
   </div>
 
-  <!-- ══ PROFILE ══ -->
+  <!-- PROFILE -->
   <div class="screen" id="screen-profile">
-    <div class="header">
-      <div><div class="header-title">My Profile</div><div class="header-sub">Your settings</div></div>
-    </div>
+    <div class="header"><div><div class="header-title">My Profile</div><div class="header-sub">Your settings</div></div></div>
     <div class="card" style="margin-bottom:20px;">
       <div class="card-row">
         <div style="display:flex;gap:14px;align-items:center;">
@@ -329,11 +352,11 @@
     <button class="btn btn-danger" onclick="signOut()">Sign Out</button>
   </div>
 
-  <!-- ══ BOTTOM NAV ══ -->
+  <!-- BOTTOM NAV -->
   <nav class="bottom-nav" id="bottom-nav" style="display:none;">
     <button class="nav-btn active" onclick="navTo('screen-today', this)">
       <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-      Today
+      Rides
     </button>
     <button class="nav-btn" onclick="navTo('screen-schedule', this)">
       <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -351,11 +374,12 @@
   </nav>
 </div>
 
-<!-- ══ MODALS ══ -->
+<!-- MODALS -->
 <div class="modal-overlay" id="modal-offer">
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title">Offer Your Car</div>
+    <div class="field"><label>Date</label><input type="date" id="offer-date" /></div>
     <div class="field"><label>Departure Time</label><input type="time" id="offer-time" value="07:30" /></div>
     <div class="field"><label>Destination</label><input type="text" id="offer-destination" placeholder="e.g. Bethel Campus" /></div>
     <div class="field"><label>Pickup Note (optional)</label><input type="text" id="offer-note" placeholder="e.g. Picking up from main gate" /></div>
@@ -374,19 +398,15 @@
       <div><div class="toggle-label">Auto-Schedule Drivers</div><div class="toggle-sub">Rotate drivers fairly based on turn order</div></div>
       <label class="toggle"><input type="checkbox" id="sched-auto-toggle" /><span class="toggle-slider"></span></label>
     </div>
-    <div class="field"><label>Default Departure Time</label><input type="time" id="sched-time" value="07:30" /></div>
     <div class="field"><label>Default Destination</label><input type="text" id="sched-destination" placeholder="e.g. Bethel Campus" /></div>
     <div class="field">
-      <label>Trip Days</label>
-      <div class="day-picker" id="day-picker">
-        <div class="day-chip" data-day="1">Mon</div><div class="day-chip" data-day="2">Tue</div>
-        <div class="day-chip" data-day="3">Wed</div><div class="day-chip" data-day="4">Thu</div>
-        <div class="day-chip" data-day="5">Fri</div><div class="day-chip" data-day="6">Sat</div>
-        <div class="day-chip" data-day="0">Sun</div>
-      </div>
+      <label>Trip Days & Departure Times</label>
+      <div class="info-box" style="margin-bottom:10px;">Select which days and set a departure time for each.</div>
+      <div id="day-time-list"></div>
     </div>
     <br/>
-    <div class="info-box">Drivers rotate in the order they appear in Members. Away drivers are skipped automatically.</div>
+    <div class="info-box">Drivers rotate in member order. Away drivers are skipped automatically.</div>
+    <div id="settings-capacity-warning" class="warning-box" style="display:none;"></div>
     <div style="display:flex;gap:10px;">
       <button class="btn btn-secondary" onclick="closeModal('modal-schedule-settings')">Cancel</button>
       <button class="btn btn-primary" onclick="saveScheduleSettings()">Save</button>
@@ -412,8 +432,7 @@
     <div class="modal-handle"></div>
     <div class="modal-title">Edit Profile</div>
     <div class="field"><label>Display Name</label><input type="text" id="edit-name" /></div>
-    <div class="field">
-      <label>Do you have a car?</label>
+    <div class="field"><label>Do you have a car?</label>
       <select id="edit-hascar"><option value="no">No — I need lifts</option><option value="yes">Yes — I can give lifts</option></select>
     </div>
     <div class="field" id="edit-seat-field" style="display:none;">
@@ -429,7 +448,6 @@
 
 <div class="toast" id="toast"></div>
 
-<!-- ══ FIREBASE ══ -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import {
@@ -455,16 +473,17 @@
   const db = getFirestore(firebaseApp);
 
   // ══ STATE ══
-  let authUser = null;      // Firebase auth user
-  let profile = null;       // { name, groupId, groupName, hasCar, seats, isAdmin, status }
+  let authUser = null;
+  let profile = null;
   let groupMembers = [];
   let pendingMembers = [];
-  let rides = [];
-  let schedule = { enabled:false, days:[], time:'07:30', destination:'', awayDates:{}, driverQueue:[] };
+  let allRides = [];          // rides for any date
+  let selectedDate = null;    // currently viewed date tab
+  let schedule = { enabled:false, days:[], dayTimes:{}, destination:'', awayDates:{}, driverQueue:[] };
   let unsubscribers = [];
   let inviteCode = '';
 
-  // ══ HELPERS ══
+  const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   const COLORS = ['#1a3a5c','#b45309','#166534','#7c3aed','#b91c1c','#0369a1'];
   function avatarColor(n) { const s=[...n].reduce((a,c)=>a+c.charCodeAt(0),0); return COLORS[s%COLORS.length]; }
   function initials(n) { return n.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2); }
@@ -474,21 +493,16 @@
   function dayOfWeek(s) { return new Date(s+'T12:00:00').getDay(); }
   function formatDate(s) { return new Date(s+'T12:00:00').toLocaleDateString('en-ZA',{weekday:'short',day:'numeric',month:'short'}); }
   function generateCode() { return Math.random().toString(36).substring(2,8).toUpperCase(); }
+  function showError(id,msg) { const el=document.getElementById(id); el.textContent=msg; el.style.display='block'; setTimeout(()=>el.style.display='none',5000); }
 
-  function showError(id, msg) {
-    const el = document.getElementById(id);
-    el.textContent = msg; el.style.display = 'block';
-    setTimeout(() => el.style.display='none', 5000);
-  }
-
-  // ══ FIRESTORE REFS ══
-  const usersCol = collection(db, 'users');
+  // Firestore refs
+  const usersCol = collection(db,'users');
   function groupDoc(gid) { return doc(db,'groups',gid); }
   function membersCol(gid) { return collection(db,'groups',gid,'members'); }
   function ridesCol(gid) { return collection(db,'groups',gid,'rides'); }
   function scheduleDoc(gid) { return doc(db,'groups',gid,'config','schedule'); }
 
-  // ══ EARLY WINDOW FUNCTIONS ══
+  // ══ EARLY WINDOW FNS ══
   window.showScreen = function(id) {
     document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
@@ -506,109 +520,85 @@
   // ══ INIT ══
   document.getElementById('today-date').textContent = new Date().toLocaleDateString('en-ZA',{weekday:'long',day:'numeric',month:'long'});
 
-  ['create','join','edit'].forEach(p => {
-    const sel = document.getElementById(p+'-hascar');
-    if(sel) sel.addEventListener('change', function() {
-      const f = document.getElementById(p+'-seat-field');
-      if(f) f.style.display = this.value==='yes'?'block':'none';
+  ['create','join','edit'].forEach(p=>{
+    const sel=document.getElementById(p+'-hascar');
+    if(sel) sel.addEventListener('change',function(){
+      const f=document.getElementById(p+'-seat-field');
+      if(f) f.style.display=this.value==='yes'?'block':'none';
     });
   });
-  document.querySelectorAll('.day-chip').forEach(chip=>{
-    chip.addEventListener('click',()=>chip.classList.toggle('selected'));
-  });
 
-  // Check for invite link
-  const urlParams = new URLSearchParams(window.location.search);
-  const urlInvite = urlParams.get('invite');
-  if(urlInvite) document.getElementById('join-code').value = urlInvite.toUpperCase();
+  const urlParams=new URLSearchParams(window.location.search);
+  const urlInvite=urlParams.get('invite');
+  if(urlInvite) document.getElementById('join-code').value=urlInvite.toUpperCase();
 
-  // ══ AUTH STATE OBSERVER ══
-  onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      authUser = user;
-      // Load user profile from Firestore
-      const snap = await getDoc(doc(usersCol, user.uid));
-      if (snap.exists()) {
-        profile = snap.data();
-        if (profile.status === 'pending') {
-          document.getElementById('loading-overlay').style.display = 'none';
-          document.getElementById('pending-group-name').textContent = profile.groupName;
+  // ══ AUTH OBSERVER ══
+  onAuthStateChanged(auth, async(user)=>{
+    if(user){
+      authUser=user;
+      const snap=await getDoc(doc(usersCol,user.uid));
+      if(snap.exists()){
+        profile=snap.data();
+        if(profile.status==='pending'){
+          document.getElementById('loading-overlay').style.display='none';
+          document.getElementById('pending-group-name').textContent=profile.groupName;
           window.showScreen('screen-pending');
-        } else if (profile.groupId) {
+        } else if(profile.groupId){
           startApp();
         } else {
-          document.getElementById('loading-overlay').style.display = 'none';
+          document.getElementById('loading-overlay').style.display='none';
           window.showScreen('screen-onboard');
         }
       } else {
-        // Auth exists but no profile yet — go to onboard
-        document.getElementById('loading-overlay').style.display = 'none';
+        document.getElementById('loading-overlay').style.display='none';
         window.showScreen('screen-onboard');
       }
     } else {
-      authUser = null; profile = null;
-      document.getElementById('loading-overlay').style.display = 'none';
+      authUser=null; profile=null;
+      document.getElementById('loading-overlay').style.display='none';
       window.showScreen('screen-home');
     }
   });
 
-  // ══ AUTH FUNCTIONS ══
-  window.signUp = async function() {
-    const name = document.getElementById('signup-name').value.trim();
-    const email = document.getElementById('signup-email').value.trim();
-    const password = document.getElementById('signup-password').value;
-    const confirm = document.getElementById('signup-confirm').value;
-    if(!name||!email||!password) { showError('signup-error','Please fill in all fields'); return; }
-    if(password !== confirm) { showError('signup-error','Passwords do not match'); return; }
-    if(password.length < 6) { showError('signup-error','Password must be at least 6 characters'); return; }
-    try {
-      const cred = await createUserWithEmailAndPassword(auth, email, password);
-      await updateProfile(cred.user, { displayName: name });
-      // Save base user doc (no group yet)
-      await setDoc(doc(usersCol, cred.user.uid), { name, email, uid: cred.user.uid, createdAt: serverTimestamp() });
+  // ══ AUTH ══
+  window.signUp = async function(){
+    const name=document.getElementById('signup-name').value.trim();
+    const email=document.getElementById('signup-email').value.trim();
+    const password=document.getElementById('signup-password').value;
+    const confirm=document.getElementById('signup-confirm').value;
+    if(!name||!email||!password){showError('signup-error','Please fill in all fields');return;}
+    if(password!==confirm){showError('signup-error','Passwords do not match');return;}
+    if(password.length<6){showError('signup-error','Password must be at least 6 characters');return;}
+    try{
+      const cred=await createUserWithEmailAndPassword(auth,email,password);
+      await updateProfile(cred.user,{displayName:name});
+      await setDoc(doc(usersCol,cred.user.uid),{name,email,uid:cred.user.uid,createdAt:serverTimestamp()});
       showToast('Account created! 🎉');
-      // onAuthStateChanged will fire and handle routing
-    } catch(e) {
-      const msgs = {
-        'auth/email-already-in-use': 'An account with this email already exists.',
-        'auth/invalid-email': 'Please enter a valid email address.',
-        'auth/weak-password': 'Password is too weak.'
-      };
-      showError('signup-error', msgs[e.code] || e.message);
+    }catch(e){
+      const msgs={'auth/email-already-in-use':'An account with this email already exists.','auth/invalid-email':'Please enter a valid email address.','auth/weak-password':'Password is too weak.'};
+      showError('signup-error',msgs[e.code]||e.message);
     }
   };
 
-  window.signIn = async function() {
-    const email = document.getElementById('login-email').value.trim();
-    const password = document.getElementById('login-password').value;
-    if(!email||!password) { showError('login-error','Please enter your email and password'); return; }
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      // onAuthStateChanged handles routing
-    } catch(e) {
-      const msgs = {
-        'auth/user-not-found': 'No account found with this email.',
-        'auth/wrong-password': 'Incorrect password.',
-        'auth/invalid-credential': 'Incorrect email or password.',
-        'auth/too-many-requests': 'Too many attempts. Please try again later.'
-      };
-      showError('login-error', msgs[e.code] || 'Sign in failed. Please try again.');
+  window.signIn = async function(){
+    const email=document.getElementById('login-email').value.trim();
+    const password=document.getElementById('login-password').value;
+    if(!email||!password){showError('login-error','Please enter your email and password');return;}
+    try{ await signInWithEmailAndPassword(auth,email,password); }
+    catch(e){
+      const msgs={'auth/user-not-found':'No account found with this email.','auth/wrong-password':'Incorrect password.','auth/invalid-credential':'Incorrect email or password.','auth/too-many-requests':'Too many attempts. Please try again later.'};
+      showError('login-error',msgs[e.code]||'Sign in failed. Please try again.');
     }
   };
 
-  window.resetPassword = async function() {
-    const email = document.getElementById('forgot-email').value.trim();
-    if(!email) { showError('forgot-error','Please enter your email'); return; }
-    try {
-      await sendPasswordResetEmail(auth, email);
-      showToast('Reset email sent! Check your inbox.');
-      window.showScreen('screen-login');
-    } catch(e) {
-      showError('forgot-error','Could not send reset email. Check the address and try again.');
-    }
+  window.resetPassword = async function(){
+    const email=document.getElementById('forgot-email').value.trim();
+    if(!email){showError('forgot-error','Please enter your email');return;}
+    try{ await sendPasswordResetEmail(auth,email); showToast('Reset email sent!'); window.showScreen('screen-login'); }
+    catch(e){ showError('forgot-error','Could not send reset email. Check the address and try again.'); }
   };
 
-  window.signOut = async function() {
+  window.signOut = async function(){
     unsubscribers.forEach(u=>u()); unsubscribers=[];
     await fbSignOut(auth);
     document.getElementById('bottom-nav').style.display='none';
@@ -616,164 +606,196 @@
   };
 
   // ══ CREATE GROUP ══
-  window.createGroup = async function() {
-    const groupName = document.getElementById('create-group').value.trim();
-    const hasCar = document.getElementById('create-hascar').value;
-    const seats = parseInt(document.getElementById('create-seats').value)||0;
-    if(!groupName) { showToast('Please enter a group name'); return; }
+  window.createGroup = async function(){
+    const groupName=document.getElementById('create-group').value.trim();
+    const hasCar=document.getElementById('create-hascar').value;
+    const seats=parseInt(document.getElementById('create-seats').value)||0;
+    if(!groupName){showToast('Please enter a group name');return;}
     showToast('Creating group…');
-    const groupId = generateCode();
-    inviteCode = generateCode();
-    const name = authUser.displayName || 'User';
-
-    await setDoc(doc(db,'groups',groupId), { name:groupName, inviteCode, createdAt:serverTimestamp(), adminUid:authUser.uid });
-    await setDoc(doc(membersCol(groupId), authUser.uid), {
-      uid: authUser.uid, name, hasCar, seats:hasCar==='yes'?seats:0,
-      isAdmin:true, status:'approved', joinedAt:serverTimestamp()
-    });
-    await updateDoc(doc(usersCol, authUser.uid), { groupId, groupName, hasCar, seats:hasCar==='yes'?seats:0, isAdmin:true, status:'approved' });
-
-    profile = { ...profile, groupId, groupName, hasCar, seats:hasCar==='yes'?seats:0, isAdmin:true, status:'approved' };
-    startApp();
-    showToast(`Group "${groupName}" created! 🎉`);
+    const groupId=generateCode();
+    inviteCode=generateCode();
+    const name=authUser.displayName||'User';
+    await setDoc(doc(db,'groups',groupId),{name:groupName,inviteCode,createdAt:serverTimestamp(),adminUid:authUser.uid});
+    await setDoc(doc(membersCol(groupId),authUser.uid),{uid:authUser.uid,name,hasCar,seats:hasCar==='yes'?seats:0,isAdmin:true,status:'approved',joinedAt:serverTimestamp()});
+    await updateDoc(doc(usersCol,authUser.uid),{groupId,groupName,hasCar,seats:hasCar==='yes'?seats:0,isAdmin:true,status:'approved'});
+    profile={...profile,groupId,groupName,hasCar,seats:hasCar==='yes'?seats:0,isAdmin:true,status:'approved'};
+    startApp(); showToast(`Group "${groupName}" created! 🎉`);
   };
 
   // ══ JOIN GROUP ══
-  window.requestJoinGroup = async function() {
-    const code = document.getElementById('join-code').value.trim().toUpperCase();
-    const hasCar = document.getElementById('join-hascar').value;
-    const seats = parseInt(document.getElementById('join-seats').value)||0;
-    if(!code) { showToast('Please enter an invite code'); return; }
+  window.requestJoinGroup = async function(){
+    const code=document.getElementById('join-code').value.trim().toUpperCase();
+    const hasCar=document.getElementById('join-hascar').value;
+    const seats=parseInt(document.getElementById('join-seats').value)||0;
+    if(!code){showToast('Please enter an invite code');return;}
     showToast('Looking up group…');
-
-    const groupsSnap = await getDocs(query(collection(db,'groups'), where('inviteCode','==',code)));
-    if(groupsSnap.empty) { showToast('Group not found — check the code'); return; }
-
-    const groupData = groupsSnap.docs[0];
-    const groupId = groupData.id;
-    const groupName = groupData.data().name;
-    const name = authUser.displayName || 'User';
-
-    // Check if already approved member
-    const existingSnap = await getDoc(doc(membersCol(groupId), authUser.uid));
-    if(existingSnap.exists() && existingSnap.data().status==='approved') {
-      const m = existingSnap.data();
-      await updateDoc(doc(usersCol, authUser.uid), { groupId, groupName, hasCar:m.hasCar, seats:m.seats, isAdmin:m.isAdmin||false, status:'approved' });
-      profile = { ...profile, groupId, groupName, hasCar:m.hasCar, seats:m.seats, isAdmin:m.isAdmin||false, status:'approved' };
+    const groupsSnap=await getDocs(query(collection(db,'groups'),where('inviteCode','==',code)));
+    if(groupsSnap.empty){showToast('Group not found — check the code');return;}
+    const groupData=groupsSnap.docs[0];
+    const groupId=groupData.id, groupName=groupData.data().name;
+    const name=authUser.displayName||'User';
+    const existingSnap=await getDoc(doc(membersCol(groupId),authUser.uid));
+    if(existingSnap.exists()&&existingSnap.data().status==='approved'){
+      const m=existingSnap.data();
+      await updateDoc(doc(usersCol,authUser.uid),{groupId,groupName,hasCar:m.hasCar,seats:m.seats,isAdmin:m.isAdmin||false,status:'approved'});
+      profile={...profile,groupId,groupName,hasCar:m.hasCar,seats:m.seats,isAdmin:m.isAdmin||false,status:'approved'};
       startApp(); return;
     }
-
-    await setDoc(doc(membersCol(groupId), authUser.uid), {
-      uid:authUser.uid, name, hasCar, seats:hasCar==='yes'?seats:0,
-      isAdmin:false, status:'pending', requestedAt:serverTimestamp()
-    });
-    await updateDoc(doc(usersCol, authUser.uid), { groupId, groupName, hasCar, seats:hasCar==='yes'?seats:0, isAdmin:false, status:'pending' });
-
-    profile = { ...profile, groupId, groupName, status:'pending' };
-    document.getElementById('pending-group-name').textContent = groupName;
-    window.showScreen('screen-pending');
-    showToast('Join request sent!');
+    await setDoc(doc(membersCol(groupId),authUser.uid),{uid:authUser.uid,name,hasCar,seats:hasCar==='yes'?seats:0,isAdmin:false,status:'pending',requestedAt:serverTimestamp()});
+    await updateDoc(doc(usersCol,authUser.uid),{groupId,groupName,hasCar,seats:hasCar==='yes'?seats:0,isAdmin:false,status:'pending'});
+    profile={...profile,groupId,groupName,status:'pending'};
+    document.getElementById('pending-group-name').textContent=groupName;
+    window.showScreen('screen-pending'); showToast('Join request sent!');
   };
 
-  window.checkApprovalStatus = async function() {
-    if(!authUser||!profile) return;
-    const snap = await getDoc(doc(membersCol(profile.groupId), authUser.uid));
-    if(snap.exists() && snap.data().status==='approved') {
-      const m = snap.data();
-      await updateDoc(doc(usersCol, authUser.uid), { status:'approved', isAdmin:m.isAdmin||false });
-      profile = { ...profile, status:'approved', isAdmin:m.isAdmin||false, hasCar:m.hasCar, seats:m.seats };
+  window.checkApprovalStatus = async function(){
+    if(!authUser||!profile)return;
+    const snap=await getDoc(doc(membersCol(profile.groupId),authUser.uid));
+    if(snap.exists()&&snap.data().status==='approved'){
+      const m=snap.data();
+      await updateDoc(doc(usersCol,authUser.uid),{status:'approved',isAdmin:m.isAdmin||false});
+      profile={...profile,status:'approved',isAdmin:m.isAdmin||false,hasCar:m.hasCar,seats:m.seats};
       startApp();
-    } else {
-      showToast('Still pending — check back soon');
-    }
+    } else { showToast('Still pending — check back soon'); }
   };
 
-  window.cancelJoinRequest = async function() {
-    if(!authUser||!profile) return;
-    await deleteDoc(doc(membersCol(profile.groupId), authUser.uid));
-    await updateDoc(doc(usersCol, authUser.uid), { groupId:null, groupName:null, status:null });
-    profile.groupId = null; profile.status = null;
-    window.showScreen('screen-onboard');
-    showToast('Request cancelled');
+  window.cancelJoinRequest = async function(){
+    if(!authUser||!profile)return;
+    await deleteDoc(doc(membersCol(profile.groupId),authUser.uid));
+    await updateDoc(doc(usersCol,authUser.uid),{groupId:null,groupName:null,status:null});
+    profile.groupId=null; profile.status=null;
+    window.showScreen('screen-onboard'); showToast('Request cancelled');
   };
 
   // ══ START APP ══
-  function startApp() {
-    document.getElementById('loading-overlay').style.display = 'none';
-    document.getElementById('bottom-nav').style.display = 'flex';
+  function startApp(){
+    selectedDate=todayKey();
+    document.getElementById('loading-overlay').style.display='none';
+    document.getElementById('bottom-nav').style.display='flex';
     window.showScreen('screen-today');
+    buildDateTabs();
     renderTodayHeader();
     renderProfile();
     startListeners();
   }
 
-  function startListeners() {
+  function startListeners(){
     unsubscribers.forEach(u=>u()); unsubscribers=[];
-    const gid = profile.groupId;
+    const gid=profile.groupId;
 
-    unsubscribers.push(onSnapshot(membersCol(gid), snap => {
-      groupMembers = snap.docs.filter(d=>d.data().status==='approved').map(d=>({id:d.id,...d.data()}));
-      pendingMembers = snap.docs.filter(d=>d.data().status==='pending').map(d=>({id:d.id,...d.data()}));
-      renderMembers();
-      syncDriverQueue();
-      const dot = document.getElementById('nav-pending-dot');
-      if(dot) dot.classList.toggle('show', profile.hasCar==='yes' && pendingMembers.length>0);
+    unsubscribers.push(onSnapshot(membersCol(gid),snap=>{
+      groupMembers=snap.docs.filter(d=>d.data().status==='approved').map(d=>({id:d.id,...d.data()}));
+      pendingMembers=snap.docs.filter(d=>d.data().status==='pending').map(d=>({id:d.id,...d.data()}));
+      renderMembers(); syncDriverQueue();
+      const dot=document.getElementById('nav-pending-dot');
+      if(dot) dot.classList.toggle('show',profile.hasCar==='yes'&&pendingMembers.length>0);
     }));
 
-    unsubscribers.push(onSnapshot(query(ridesCol(gid), where('date','==',todayKey())), snap => {
-      rides = snap.docs.map(d=>({id:d.id,...d.data()}));
-      renderToday();
+    // Listen to rides for today + next 14 days
+    const gid2=profile.groupId;
+    const start=todayKey(), end=addDays(start,14);
+    unsubscribers.push(onSnapshot(query(ridesCol(gid2),where('date','>=',start),where('date','<=',end)),snap=>{
+      allRides=snap.docs.map(d=>({id:d.id,...d.data()}));
+      renderRidesForDate(selectedDate);
     }));
 
-    unsubscribers.push(onSnapshot(scheduleDoc(gid), snap => {
-      if(snap.exists()) {
-        schedule = {...schedule,...snap.data()};
+    unsubscribers.push(onSnapshot(scheduleDoc(gid),snap=>{
+      if(snap.exists()){
+        schedule={...schedule,...snap.data()};
         if(!schedule.awayDates) schedule.awayDates={};
         if(!schedule.driverQueue) schedule.driverQueue=[];
+        if(!schedule.dayTimes) schedule.dayTimes={};
       }
-      renderSchedule();
+      renderSchedule(); renderCapacityWarning();
     }));
 
-    // Load invite code
-    getDoc(groupDoc(gid)).then(snap => {
-      if(snap.exists()) {
-        inviteCode = snap.data().inviteCode;
-        document.getElementById('invite-code-display').textContent = inviteCode;
-      }
+    getDoc(groupDoc(gid)).then(snap=>{
+      if(snap.exists()){ inviteCode=snap.data().inviteCode; document.getElementById('invite-code-display').textContent=inviteCode; }
     });
   }
 
-  // ══ TODAY ══
-  function renderTodayHeader() {
-    if(!profile) return;
-    document.getElementById('today-group-badge').textContent = profile.groupName;
-    document.getElementById('driver-cta').style.display = profile.hasCar==='yes'?'block':'none';
+  // ══ DATE TABS ══
+  function buildDateTabs(){
+    const tabs=document.getElementById('date-tabs');
+    tabs.innerHTML='';
+    const today=todayKey();
+    for(let i=0;i<14;i++){
+      const d=addDays(today,i);
+      const dateObj=new Date(d+'T12:00:00');
+      const label=i===0?'Today':i===1?'Tomorrow':dateObj.toLocaleDateString('en-ZA',{weekday:'short',day:'numeric',month:'short'});
+      const tab=document.createElement('div');
+      tab.className='date-tab'+(d===selectedDate?' active':'');
+      tab.textContent=label;
+      tab.onclick=()=>selectDate(d);
+      tabs.appendChild(tab);
+    }
   }
 
-  function renderToday() {
-    const list = document.getElementById('rides-list');
-    if(rides.length===0) {
-      list.innerHTML=`<div class="empty"><div class="empty-icon">🛣️</div><p>No rides posted yet for today.<br/>Check back soon or offer yours!</p></div>`;
+  function selectDate(date){
+    selectedDate=date;
+    document.querySelectorAll('.date-tab').forEach((t,i)=>{
+      const d=addDays(todayKey(),i);
+      t.classList.toggle('active',d===date);
+    });
+    renderRidesForDate(date);
+  }
+
+  // ══ RIDES ══
+  function renderTodayHeader(){
+    if(!profile)return;
+    document.getElementById('today-group-badge').textContent=profile.groupName;
+    document.getElementById('driver-cta').style.display=profile.hasCar==='yes'?'block':'none';
+  }
+
+  function renderRidesForDate(date){
+    const rides=allRides.filter(r=>r.date===date);
+    const list=document.getElementById('rides-list');
+    if(rides.length===0){
+      list.innerHTML=`<div class="empty"><div class="empty-icon">🛣️</div><p>No rides posted for ${date===todayKey()?'today':formatDate(date)}.<br/>${profile.hasCar==='yes'?'Tap the button above to offer yours!':'Check back soon.'}</p></div>`;
       return;
     }
-    const myName = profile.name;
-    list.innerHTML = rides.map(ride => {
+    const myName=profile.name;
+    list.innerHTML=rides.map(ride=>{
       const taken=(ride.passengers||[]).length, total=ride.totalSeats, full=taken>=total;
       const iAmIn=(ride.passengers||[]).includes(myName);
       const iAmDriver=ride.driverName===myName;
       const iAmOut=(ride.notJoining||[]).includes(myName);
+
+      // Seat icons
       const seatsHTML=Array.from({length:total},(_,i)=>{
         const p=(ride.passengers||[])[i];
         const cls=p?(p===myName?'seat mine':'seat taken'):'seat open';
         const click=(!p&&!iAmIn&&!iAmDriver&&!iAmOut&&!full)?`onclick="claimSeat('${ride.id}')"` :'';
-        return `<div class="${cls}" title="${p||'Available'}" ${click}>${p?'👤':'＋'}</div>`;
+        return `<div class="${cls}" ${click}>${p?'👤':'＋'}</div>`;
       }).join('');
-      const notJoinHTML=(ride.notJoining||[]).length>0?`<div style="margin-top:10px;font-size:12px;color:var(--muted);">Not joining: ${(ride.notJoining||[]).join(', ')}</div>`:'';
+
+      // Passenger drawer
+      const passengers=ride.passengers||[];
+      const drawerHTML=passengers.length>0?`
+        <div style="margin-top:10px;">
+          <button class="btn btn-secondary btn-sm" onclick="togglePassengers('${ride.id}')" style="font-size:12px;padding:6px 12px;">
+            👥 ${passengers.length} passenger${passengers.length!==1?'s':''} — tap to see
+          </button>
+          <div class="passengers-drawer" id="drawer-${ride.id}">
+            <div class="passengers-drawer-inner">
+              ${passengers.map(p=>`
+                <div class="passenger-row">
+                  <div class="avatar" style="width:30px;height:30px;font-size:11px;background:${avatarColor(p)};color:#fff;">${initials(p)}</div>
+                  <span style="font-size:14px;font-weight:500;">${p}${p===myName?' <span style="font-size:11px;color:var(--accent);">(you)</span>':''}</span>
+                </div>`).join('')}
+            </div>
+          </div>
+        </div>`:
+        `<div style="margin-top:8px;font-size:12px;color:var(--muted);">No passengers yet</div>`;
+
+      const notJoinHTML=(ride.notJoining||[]).length>0?`<div style="margin-top:6px;font-size:12px;color:var(--muted);">Not joining: ${(ride.notJoining||[]).join(', ')}</div>`:'';
+
       let act='';
       if(iAmDriver) act=`<div style="margin-top:12px;"><button class="btn btn-danger btn-sm" onclick="cancelRide('${ride.id}')">Cancel this ride</button></div>`;
       else if(iAmIn) act=`<div style="margin-top:12px;"><button class="btn btn-danger btn-sm" onclick="cancelSeat('${ride.id}')">Cancel my seat</button></div>`;
-      else if(iAmOut) act=`<div style="margin-top:12px;display:flex;align-items:center;gap:10px;"><span style="font-size:13px;color:var(--muted);">🚫 Not joining today</span><button class="btn btn-secondary btn-sm" onclick="undoNotJoining('${ride.id}')">Undo</button></div>`;
-      else act=`<div style="margin-top:12px;display:flex;gap:8px;">${!full?`<button class="btn btn-primary btn-sm" onclick="claimSeat('${ride.id}')">+ Join ride</button>`:''}<button class="btn btn-secondary btn-sm" onclick="markNotJoining('${ride.id}')">Not joining today</button></div>`;
+      else if(iAmOut) act=`<div style="margin-top:12px;display:flex;align-items:center;gap:10px;"><span style="font-size:13px;color:var(--muted);">🚫 Not joining</span><button class="btn btn-secondary btn-sm" onclick="undoNotJoining('${ride.id}')">Undo</button></div>`;
+      else act=`<div style="margin-top:12px;display:flex;gap:8px;">${!full?`<button class="btn btn-primary btn-sm" onclick="claimSeat('${ride.id}')">+ Join ride</button>`:''}<button class="btn btn-secondary btn-sm" onclick="markNotJoining('${ride.id}')">Not joining</button></div>`;
+
       return `<div class="card">
         <div class="card-row" style="margin-bottom:10px;">
           <div style="display:flex;align-items:center;gap:10px;">
@@ -782,58 +804,75 @@
           </div>
           <div class="pill ${full?'red':'green'}">${full?'🔴 Full':`${total-taken} seat${total-taken!==1?'s':''} open`}</div>
         </div>
-        <div class="seats">${seatsHTML}</div>${notJoinHTML}${act}
+        <div class="seats">${seatsHTML}</div>
+        ${drawerHTML}${notJoinHTML}${act}
       </div>`;
     }).join('');
   }
 
-  window.openOfferModal = function() { document.getElementById('modal-offer').classList.add('open'); };
-  window.postRide = async function() {
+  window.togglePassengers = function(rideId){
+    const drawer=document.getElementById('drawer-'+rideId);
+    if(drawer) drawer.classList.toggle('open');
+  };
+
+  window.openOfferModal = function(){
+    // Pre-fill with selected date
+    document.getElementById('offer-date').value=selectedDate||todayKey();
+    document.getElementById('modal-offer').classList.add('open');
+  };
+
+  window.postRide = async function(){
+    const date=document.getElementById('offer-date').value;
     const time=document.getElementById('offer-time').value;
     const destination=document.getElementById('offer-destination').value.trim();
     const note=document.getElementById('offer-note').value.trim();
+    if(!date){showToast('Please select a date');return;}
     if(!time){showToast('Please set a time');return;}
     if(!destination){showToast('Please enter a destination');return;}
-    if(rides.find(r=>r.driverName===profile.name)){showToast('You already posted a ride today');closeModal('modal-offer');return;}
+    if(date<todayKey()){showToast('Cannot post rides in the past');return;}
+    if(allRides.find(r=>r.driverName===profile.name&&r.date===date)){showToast('You already posted a ride for this date');closeModal('modal-offer');return;}
     await setDoc(doc(ridesCol(profile.groupId),Date.now().toString()),{
-      date:todayKey(),driverName:profile.name,time,destination,note,
+      date,driverName:profile.name,time,destination,note,
       totalSeats:profile.seats,passengers:[],notJoining:[],createdAt:serverTimestamp()
     });
     closeModal('modal-offer');
     document.getElementById('offer-destination').value='';
     document.getElementById('offer-note').value='';
-    showToast('Ride posted! 🚗');
+    // Switch to that date's tab
+    selectedDate=date; buildDateTabs();
+    showToast(`Ride posted for ${date===todayKey()?'today':formatDate(date)}! 🚗`);
   };
-  window.claimSeat = async function(rideId) {
-    const ride=rides.find(r=>r.id===rideId);
+
+  window.claimSeat = async function(rideId){
+    const ride=allRides.find(r=>r.id===rideId);
     if(!ride||(ride.passengers||[]).length>=ride.totalSeats)return;
     await updateDoc(doc(ridesCol(profile.groupId),rideId),{passengers:arrayUnion(profile.name)});
     showToast(`Seat claimed in ${ride.driverName}'s car!`);
   };
-  window.cancelSeat = async function(rideId) {
+  window.cancelSeat = async function(rideId){
     await updateDoc(doc(ridesCol(profile.groupId),rideId),{passengers:arrayRemove(profile.name)});
     showToast('Seat cancelled');
   };
-  window.cancelRide = async function(rideId) {
+  window.cancelRide = async function(rideId){
     await deleteDoc(doc(ridesCol(profile.groupId),rideId));
     showToast('Ride cancelled');
   };
-  window.markNotJoining = async function(rideId) {
+  window.markNotJoining = async function(rideId){
     await updateDoc(doc(ridesCol(profile.groupId),rideId),{notJoining:arrayUnion(profile.name),passengers:arrayRemove(profile.name)});
-    showToast("Noted — you're not joining today");
+    showToast("Noted — you're not joining");
   };
-  window.undoNotJoining = async function(rideId) {
+  window.undoNotJoining = async function(rideId){
     await updateDoc(doc(ridesCol(profile.groupId),rideId),{notJoining:arrayRemove(profile.name)});
     showToast('Response cleared');
   };
 
   // ══ MEMBERS ══
-  function renderMembers() {
-    if(!profile) return;
-    document.getElementById('members-group-name').textContent = profile.groupName;
-    const isDriver = profile.hasCar==='yes';
-    const pendingSection = document.getElementById('pending-section');
-    if(isDriver && pendingMembers.length>0) {
+  function renderMembers(){
+    if(!profile)return;
+    document.getElementById('members-group-name').textContent=profile.groupName;
+    const isDriver=profile.hasCar==='yes';
+    const pendingSection=document.getElementById('pending-section');
+    if(isDriver&&pendingMembers.length>0){
       pendingSection.style.display='block';
       document.getElementById('pending-count').textContent=pendingMembers.length;
       document.getElementById('pending-list').innerHTML=pendingMembers.map(m=>`
@@ -841,7 +880,7 @@
           <div class="card-row">
             <div style="display:flex;align-items:center;gap:12px;">
               <div class="avatar" style="background:${avatarColor(m.name)};color:#fff;">${initials(m.name)}</div>
-              <div><div class="card-title">${m.name}</div><div class="card-meta">${m.hasCar==='yes'?`🚗 Driver · ${m.seats} seat${m.seats!==1?'s':''}`:'🚶 Needs a lift'}</div></div>
+              <div><div class="card-title">${m.name}</div><div class="card-meta">${m.hasCar==='yes'?`🚗 ${m.seats} seat${m.seats!==1?'s':''}`:'🚶 Needs a lift'}</div></div>
             </div>
             <div style="display:flex;gap:6px;">
               <button class="btn btn-success btn-sm" onclick="approveMember('${m.id}')">✓</button>
@@ -863,34 +902,30 @@
               <div class="card-meta">${m.hasCar==='yes'?`🚗 Driver · ${m.seats} seat${m.seats!==1?'s':''}`:'🚶 Needs a lift'}</div>
             </div>
           </div>
-          ${isDriver && m.uid!==authUser.uid?`<button class="btn btn-danger btn-sm" onclick="removeMember('${m.id}','${m.name}')">Remove</button>`:''}
+          ${isDriver&&m.uid!==authUser.uid?`<button class="btn btn-danger btn-sm" onclick="removeMember('${m.id}','${m.name}')">Remove</button>`:''}
         </div>
       </div>`).join('');
   }
 
-  window.copyCode = async function() {
-    await navigator.clipboard.writeText(inviteCode);
-    showToast('Code copied!');
-  };
-  window.copyLink = async function() {
+  window.copyCode=async function(){ await navigator.clipboard.writeText(inviteCode); showToast('Code copied!'); };
+  window.copyLink=async function(){
     const link=`${window.location.origin}${window.location.pathname}?invite=${inviteCode}`;
-    await navigator.clipboard.writeText(link);
-    showToast('Invite link copied!');
+    await navigator.clipboard.writeText(link); showToast('Invite link copied!');
   };
-  window.approveMember = async function(uid) {
+  window.approveMember=async function(uid){
     await updateDoc(doc(membersCol(profile.groupId),uid),{status:'approved'});
     await updateDoc(doc(usersCol,uid),{status:'approved'});
     showToast('Member approved ✓');
   };
-  window.rejectMember = async function(uid, name) {
-    if(confirm(`Remove ${name}'s request?`)) {
+  window.rejectMember=async function(uid,name){
+    if(confirm(`Remove ${name}'s request?`)){
       await deleteDoc(doc(membersCol(profile.groupId),uid));
       await updateDoc(doc(usersCol,uid),{groupId:null,groupName:null,status:null});
       showToast(`${name} removed`);
     }
   };
-  window.removeMember = async function(uid, name) {
-    if(confirm(`Remove ${name} from the group?`)) {
+  window.removeMember=async function(uid,name){
+    if(confirm(`Remove ${name} from the group?`)){
       await deleteDoc(doc(membersCol(profile.groupId),uid));
       await updateDoc(doc(usersCol,uid),{groupId:null,groupName:null,status:null});
       showToast(`${name} removed`);
@@ -898,27 +933,24 @@
   };
 
   // ══ PROFILE ══
-  function renderProfile() {
-    if(!profile||!authUser) return;
+  function renderProfile(){
+    if(!profile||!authUser)return;
     const av=document.getElementById('profile-avatar');
     av.textContent=initials(profile.name); av.style.background=avatarColor(profile.name); av.style.color='#fff';
     document.getElementById('profile-name-display').textContent=profile.name;
     document.getElementById('profile-email-display').textContent=authUser.email;
     document.getElementById('profile-group-display').textContent=profile.groupName||'No group';
-    document.getElementById('profile-role-display').innerHTML=profile.isAdmin
-      ?'<span style="color:var(--warning);font-weight:600;">⭐ Admin</span>'
-      :'<span style="color:var(--muted);">Member</span>';
+    document.getElementById('profile-role-display').innerHTML=profile.isAdmin?'<span style="color:var(--warning);font-weight:600;">⭐ Admin</span>':'<span style="color:var(--muted);">Member</span>';
     document.getElementById('profile-car-display').textContent=profile.hasCar==='yes'?'✅ Yes':'❌ No';
     document.getElementById('profile-seats-display').textContent=profile.hasCar==='yes'?profile.seats:'—';
   }
-
-  window.openEditProfileModal = function() {
+  window.openEditProfileModal=function(){
     document.getElementById('edit-name').value=profile.name;
     document.getElementById('edit-hascar').value=profile.hasCar;
     if(profile.hasCar==='yes'){document.getElementById('edit-seat-field').style.display='block';document.getElementById('edit-seats').value=profile.seats;}
     document.getElementById('modal-edit-profile').classList.add('open');
   };
-  window.saveEditProfile = async function() {
+  window.saveEditProfile=async function(){
     const name=document.getElementById('edit-name').value.trim();
     const hasCar=document.getElementById('edit-hascar').value;
     const seats=parseInt(document.getElementById('edit-seats').value)||0;
@@ -927,54 +959,136 @@
     await updateDoc(doc(usersCol,authUser.uid),{name,hasCar,seats:hasCar==='yes'?seats:0});
     await updateProfile(authUser,{displayName:name});
     profile.name=name; profile.hasCar=hasCar; profile.seats=hasCar==='yes'?seats:0;
-    closeModal('modal-edit-profile');
-    renderProfile(); renderTodayHeader();
-    showToast('Profile updated!');
+    closeModal('modal-edit-profile'); renderProfile(); renderTodayHeader(); showToast('Profile updated!');
   };
-  window.leaveGroup = async function() {
-    if(confirm('Are you sure you want to leave this group?')) {
+  window.leaveGroup=async function(){
+    if(confirm('Are you sure you want to leave this group?')){
       await deleteDoc(doc(membersCol(profile.groupId),authUser.uid));
       await updateDoc(doc(usersCol,authUser.uid),{groupId:null,groupName:null,status:null,isAdmin:false});
       unsubscribers.forEach(u=>u()); unsubscribers=[];
       document.getElementById('bottom-nav').style.display='none';
       profile.groupId=null; profile.status=null;
-      window.showScreen('screen-onboard');
-      showToast('You have left the group');
+      window.showScreen('screen-onboard'); showToast('You have left the group');
     }
   };
 
   // ══ SCHEDULE ══
-  function syncDriverQueue() {
+  function syncDriverQueue(){
     const drivers=groupMembers.filter(m=>m.hasCar==='yes').map(m=>m.name);
     let q=schedule.driverQueue||[];
     drivers.forEach(d=>{if(!q.includes(d))q.push(d);});
     q=q.filter(n=>drivers.includes(n));
     schedule.driverQueue=q;
   }
-  function buildSchedule(weeksAhead) {
+
+  // Capacity check: returns { ok, totalSeats, memberCount, shortfall }
+  function capacityCheck(){
+    const drivers=groupMembers.filter(m=>m.hasCar==='yes');
+    const totalMembers=groupMembers.length;
+    if(drivers.length===0) return { ok:false, totalSeats:0, memberCount:totalMembers, noDrivers:true };
+    // Max seats in a single trip (sum all drivers, drivers count as 1 themselves + their seats)
+    const totalSeats=drivers.reduce((sum,d)=>{
+      // driver occupies 1 seat (themselves), so capacity = seats (passengers) + 1 (driver)
+      // non-drivers need a seat
+      return sum+(d.seats||0);
+    },0);
+    // Number of non-drivers who need seats
+    const nonDrivers=groupMembers.filter(m=>m.hasCar!=='yes').length;
+    const ok=totalSeats>=nonDrivers;
+    return { ok, totalSeats, nonDrivers, shortfall: ok?0:nonDrivers-totalSeats };
+  }
+
+  function renderCapacityWarning(){
+    if(!schedule.enabled||groupMembers.length===0) {
+      document.getElementById('capacity-banner').style.display='none';
+      return;
+    }
+    const check=capacityCheck();
+    const banner=document.getElementById('capacity-banner');
+    const bannerText=document.getElementById('capacity-banner-text');
+    if(!check.ok){
+      banner.style.display='block';
+      if(check.noDrivers){
+        bannerText.textContent='No drivers in the group yet. Add drivers to enable scheduling.';
+      } else {
+        bannerText.textContent=`Available seats (${check.totalSeats}) don't cover all passengers (${check.nonDrivers} need a lift). ${check.shortfall} person${check.shortfall!==1?'s':''} may be left without a ride.`;
+      }
+    } else {
+      banner.style.display='none';
+    }
+  }
+
+  function getTimeForDay(dayNum){
+    const dt=schedule.dayTimes||{};
+    return dt[dayNum]||schedule.time||'07:30';
+  }
+
+  function buildSchedule(weeksAhead){
     const sc=schedule;
     if(!sc.enabled||!sc.days||sc.days.length===0||!sc.driverQueue||sc.driverQueue.length===0)return[];
-    const result=[],today=todayKey(),end=addDays(today,weeksAhead*7);
-    let current=today,queueIndex=0;
+    const result=[], today=todayKey(), end=addDays(today,weeksAhead*7);
+    let current=today, queueIndex=0;
     while(current<=end){
-      if(sc.days.map(Number).includes(dayOfWeek(current))){
+      const dow=dayOfWeek(current);
+      if(sc.days.map(Number).includes(dow)){
         const awayOnDate=sc.awayDates[current]||[];
-        let found=null;
-        for(let i=0;i<sc.driverQueue.length;i++){const c=sc.driverQueue[(queueIndex+i)%sc.driverQueue.length];if(!awayOnDate.includes(c)){found=c;break;}}
-        result.push({date:current,driver:found||'—',noDriver:!found,time:sc.time,destination:sc.destination,awayOnDate});
-        queueIndex=(queueIndex+1)%sc.driverQueue.length;
+        const time=getTimeForDay(dow);
+
+        // Determine how many cars are needed
+        const drivers=groupMembers.filter(m=>m.hasCar==='yes');
+        const nonDriverCount=groupMembers.filter(m=>m.hasCar!=='yes').length;
+
+        // Assign drivers until all passengers covered
+        let seatsNeeded=nonDriverCount;
+        const assignedDrivers=[];
+        let qi=queueIndex;
+        let tried=0;
+        while(seatsNeeded>0&&tried<sc.driverQueue.length){
+          const candidate=sc.driverQueue[qi%sc.driverQueue.length];
+          if(!awayOnDate.includes(candidate)){
+            const driverObj=drivers.find(d=>d.name===candidate);
+            const driverSeats=driverObj?driverObj.seats:0;
+            assignedDrivers.push({name:candidate,seats:driverSeats});
+            seatsNeeded-=driverSeats;
+          }
+          qi++; tried++;
+        }
+
+        // If no assigned drivers found, assign at least one
+        if(assignedDrivers.length===0){
+          let found=null;
+          for(let i=0;i<sc.driverQueue.length;i++){
+            const c=sc.driverQueue[(queueIndex+i)%sc.driverQueue.length];
+            if(!awayOnDate.includes(c)){found=c;break;}
+          }
+          if(found) assignedDrivers.push({name:found,seats:0});
+        }
+
+        result.push({
+          date:current,
+          drivers:assignedDrivers,
+          primaryDriver:assignedDrivers[0]?.name||'—',
+          noDriver:assignedDrivers.length===0,
+          time,
+          destination:sc.destination,
+          awayOnDate,
+          needsExtraCar:seatsNeeded>0
+        });
+        queueIndex=(queueIndex+assignedDrivers.length)%Math.max(sc.driverQueue.length,1);
       }
       current=addDays(current,1);
     }
     return result;
   }
-  function renderSchedule() {
+
+  function renderSchedule(){
     const sc=schedule;
-    const noConfig=document.getElementById('schedule-no-config'),content=document.getElementById('schedule-content');
+    const noConfig=document.getElementById('schedule-no-config'), content=document.getElementById('schedule-content');
+    renderCapacityWarning();
     if(!sc.enabled||!sc.days||sc.days.length===0){noConfig.style.display='block';content.style.display='none';return;}
-    noConfig.style.display='none';content.style.display='block';
-    const entries=buildSchedule(4),myName=profile?profile.name:'';
-    const myNext=entries.find(e=>e.driver===myName&&e.date>=todayKey());
+    noConfig.style.display='none'; content.style.display='block';
+    const entries=buildSchedule(4), myName=profile?profile.name:'';
+    const myNext=entries.find(e=>e.drivers.some(d=>d.name===myName)&&e.date>=todayKey());
     const myNextEl=document.getElementById('my-next-drive');
     if(myNext&&profile&&profile.hasCar==='yes'){
       const alreadyAway=(sc.awayDates[myNext.date]||[]).includes(myName);
@@ -982,23 +1096,28 @@
         <div class="card-meta" style="margin-bottom:4px;">Your next scheduled drive</div>
         <div class="card-title">📅 ${formatDate(myNext.date)}</div>
         <div class="card-meta">🕐 ${myNext.time} · 📍 ${myNext.destination}</div>
+        ${myNext.drivers.length>1?`<div class="card-meta" style="margin-top:4px;">Co-driving with: ${myNext.drivers.filter(d=>d.name!==myName).map(d=>d.name).join(', ')}</div>`:''}
         <div style="margin-top:12px;">${alreadyAway?'<span style="font-size:13px;color:var(--danger);">🏖️ You\'ve marked yourself away</span>':`<button class="btn btn-warning btn-sm" onclick="openAwayModal('${myNext.date}')">🏖️ Mark me as away</button>`}</div>
       </div>`;
     } else { myNextEl.innerHTML=''; }
+
     const list=document.getElementById('schedule-list');
     if(entries.length===0){list.innerHTML=`<div class="empty"><div class="empty-icon">📅</div><p>No trips scheduled.</p></div>`;return;}
     list.innerHTML=entries.map(e=>{
-      const isMe=e.driver===myName,alreadyAway=(sc.awayDates[e.date]||[]).includes(myName);
+      const isMe=e.drivers.some(d=>d.name===myName);
+      const alreadyAway=(sc.awayDates[e.date]||[]).includes(myName);
       const awayLabel=e.awayOnDate.length>0?`<div style="font-size:12px;color:var(--danger);margin-top:4px;">⚠️ Away: ${e.awayOnDate.join(', ')}</div>`:'';
+      const extraCarLabel=e.needsExtraCar?`<div style="font-size:12px;color:var(--warning);margin-top:4px;">⚠️ Not enough seats for all members</div>`:'';
+      const driversLabel=e.drivers.length>1
+        ?e.drivers.map(d=>`<span style="display:inline-flex;align-items:center;gap:4px;margin-right:8px;"><span class="avatar" style="width:22px;height:22px;font-size:9px;background:${avatarColor(d.name)};color:#fff;">${initials(d.name)}</span>${d.name}${d.name===myName?' (you)':''}</span>`).join('')
+        :`<span class="avatar" style="width:28px;height:28px;font-size:11px;background:${avatarColor(e.primaryDriver)};color:#fff;">${e.noDriver?'?':initials(e.primaryDriver)}</span> ${e.primaryDriver}${isMe&&e.drivers.length===1?' <span style="font-size:12px;color:var(--accent);">(you)</span>':''}`;
       return `<div class="sched-card ${isMe?'is-me':''}">
         <div class="sched-date">${e.date===todayKey()?'📍 Today — ':''}${formatDate(e.date)}</div>
         <div class="card-row" style="align-items:flex-start;">
-          <div>
-            <div style="font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px;">
-              <span class="avatar" style="width:28px;height:28px;font-size:11px;background:${avatarColor(e.driver)};color:#fff;">${e.noDriver?'?':initials(e.driver)}</span>
-              <span>${e.driver}${isMe?' <span style="font-size:12px;color:var(--accent);">(you)</span>':''}</span>
-            </div>
-            <div class="sched-meta" style="margin-top:4px;">🕐 ${e.time} · 📍 ${e.destination}</div>${awayLabel}
+          <div style="flex:1;">
+            <div style="font-size:15px;font-weight:600;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">${driversLabel}</div>
+            <div class="sched-meta" style="margin-top:4px;">🕐 ${e.time} · 📍 ${e.destination}</div>
+            ${awayLabel}${extraCarLabel}
           </div>
           ${isMe&&e.date>=todayKey()&&!alreadyAway?`<button class="btn btn-warning btn-sm" onclick="openAwayModal('${e.date}')">Away</button>`:''}
           ${isMe&&alreadyAway?`<span style="font-size:12px;color:var(--danger);padding-top:6px;">🏖️ Away</span>`:''}
@@ -1006,29 +1125,70 @@
       </div>`;
     }).join('');
   }
-  window.openScheduleSettingsModal = function() {
+
+  window.openScheduleSettingsModal=function(){
     const sc=schedule;
     document.getElementById('sched-auto-toggle').checked=sc.enabled;
-    document.getElementById('sched-time').value=sc.time||'07:30';
     document.getElementById('sched-destination').value=sc.destination||'';
-    document.querySelectorAll('.day-chip').forEach(chip=>{chip.classList.toggle('selected',(sc.days||[]).map(Number).includes(parseInt(chip.dataset.day)));});
+
+    // Build day-time rows
+    const container=document.getElementById('day-time-list');
+    const allDays=[{num:1,label:'Monday'},{num:2,label:'Tuesday'},{num:3,label:'Wednesday'},{num:4,label:'Thursday'},{num:5,label:'Friday'},{num:6,label:'Saturday'},{num:0,label:'Sunday'}];
+    container.innerHTML=allDays.map(day=>{
+      const isSelected=(sc.days||[]).map(Number).includes(day.num);
+      const time=(sc.dayTimes||{})[day.num]||sc.time||'07:30';
+      return `<div class="day-time-row" id="dtr-${day.num}">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+          <input type="checkbox" data-day="${day.num}" ${isSelected?'checked':''} onchange="toggleDayRow(${day.num})" style="width:16px;height:16px;accent-color:var(--accent);" />
+          <span class="day-time-label">${day.label}</span>
+        </label>
+        <input type="time" id="time-${day.num}" value="${time}" class="day-time-input" ${isSelected?'':'style="opacity:0.3;pointer-events:none;"'} />
+      </div>`;
+    }).join('');
+
+    // Capacity warning in settings
+    const check=capacityCheck();
+    const warn=document.getElementById('settings-capacity-warning');
+    if(!check.ok&&groupMembers.length>0){
+      warn.style.display='block';
+      warn.textContent=check.noDrivers?'⚠️ No drivers in the group yet.':
+        `⚠️ Available seats (${check.totalSeats}) don't cover all ${check.nonDrivers} passengers who need a lift.`;
+    } else { warn.style.display='none'; }
+
     document.getElementById('modal-schedule-settings').classList.add('open');
   };
-  window.saveScheduleSettings = async function() {
+
+  window.toggleDayRow=function(dayNum){
+    const cb=document.querySelector(`input[data-day="${dayNum}"]`);
+    const timeInput=document.getElementById(`time-${dayNum}`);
+    if(cb.checked){timeInput.style.opacity='1';timeInput.style.pointerEvents='auto';}
+    else{timeInput.style.opacity='0.3';timeInput.style.pointerEvents='none';}
+  };
+
+  window.saveScheduleSettings=async function(){
     const days=[];
-    document.querySelectorAll('.day-chip.selected').forEach(chip=>days.push(parseInt(chip.dataset.day)));
+    const dayTimes={};
+    document.querySelectorAll('#day-time-list input[type=checkbox]').forEach(cb=>{
+      if(cb.checked){
+        const dayNum=parseInt(cb.dataset.day);
+        days.push(dayNum);
+        dayTimes[dayNum]=document.getElementById(`time-${dayNum}`).value||'07:30';
+      }
+    });
     syncDriverQueue();
     await setDoc(scheduleDoc(profile.groupId),{
       enabled:document.getElementById('sched-auto-toggle').checked,
-      time:document.getElementById('sched-time').value,
       destination:document.getElementById('sched-destination').value.trim(),
-      days,driverQueue:schedule.driverQueue,awayDates:schedule.awayDates||{}
+      days, dayTimes,
+      driverQueue:schedule.driverQueue,
+      awayDates:schedule.awayDates||{}
     });
     closeModal('modal-schedule-settings');
     showToast('Schedule saved ✓');
   };
-  window.openAwayModal = function(date) { document.getElementById('away-date').value=date||todayKey(); document.getElementById('modal-away').classList.add('open'); };
-  window.saveAwayDate = async function() {
+
+  window.openAwayModal=function(date){document.getElementById('away-date').value=date||todayKey();document.getElementById('modal-away').classList.add('open');};
+  window.saveAwayDate=async function(){
     const date=document.getElementById('away-date').value;
     if(!date){showToast('Please select a date');return;}
     const awayDates={...(schedule.awayDates||{})};
@@ -1043,7 +1203,7 @@
   document.querySelectorAll('.modal-overlay').forEach(m=>{
     m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});
   });
-  function showToast(msg) {
+  function showToast(msg){
     const t=document.getElementById('toast');
     t.textContent=msg; t.classList.add('show');
     setTimeout(()=>t.classList.remove('show'),2500);
