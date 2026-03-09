@@ -495,6 +495,19 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-add-guest">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Add a Guest</div>
+    <div class="info-box">Add someone who isn't part of the group — a friend, family member, or visitor.</div>
+    <div class="field"><label>Guest Name</label><input type="text" id="guest-name" placeholder="e.g. John" /></div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-secondary" onclick="closeModal('modal-add-guest')">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmAddGuest()">Add Guest</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-schedule-settings">
   <div class="modal">
     <div class="modal-handle"></div>
@@ -870,9 +883,14 @@
       const iAmDriver=ride.driverName===myName;
       const iAmOut=(ride.notJoining||[]).includes(myName);
 
-      // Seat icons
+      // Seat icons — driver sees static icons, no clickable + buttons
       const seatsHTML=Array.from({length:total},(_,i)=>{
         const p=(ride.passengers||[])[i];
+        if(iAmDriver){
+          // Driver view: taken seats show name initial, empty seats are plain grey
+          const cls=p?'seat taken':'seat';
+          return `<div class="${cls}" style="${!p?'cursor:default;opacity:0.4;':''}">${p?'👤':'—'}</div>`;
+        }
         const cls=p?(p===myName?'seat mine':'seat taken'):'seat open';
         const click=(!p&&!iAmIn&&!iAmDriver&&!iAmOut&&!full)?`onclick="claimSeat('${ride.id}')"` :'';
         return `<div class="${cls}" ${click}>${p?'👤':'＋'}</div>`;
@@ -891,16 +909,22 @@
                 <div class="passenger-row">
                   <div class="avatar" style="width:30px;height:30px;font-size:11px;background:${avatarColor(p)};color:#fff;">${initials(p)}</div>
                   <span style="font-size:14px;font-weight:500;">${p}${p===myName?' <span style="font-size:11px;color:var(--accent);">(you)</span>':''}</span>
+                  ${iAmDriver?`<button onclick="removePassenger('${ride.id}','${p}')" style="margin-left:auto;background:none;border:none;color:var(--danger);font-size:13px;cursor:pointer;">✕</button>`:''}
                 </div>`).join('')}
             </div>
           </div>
         </div>`:
-        `<div style="margin-top:8px;font-size:12px;color:var(--muted);">No passengers yet</div>`;
+        `<div style="margin-top:8px;font-size:12px;color:var(--muted);">${iAmDriver?'No passengers yet':'No passengers yet'}</div>`;
 
       const notJoinHTML=(ride.notJoining||[]).length>0?`<div style="margin-top:6px;font-size:12px;color:var(--muted);">Not joining: ${(ride.notJoining||[]).join(', ')}</div>`:'';
 
       let act='';
-      if(iAmDriver) act=`<div style="margin-top:12px;"><button class="btn btn-danger btn-sm" onclick="cancelRide('${ride.id}')">Cancel this ride</button></div>`;
+      if(iAmDriver){
+        act=`<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+          ${!full?`<button class="btn btn-secondary btn-sm" onclick="openAddGuestModal('${ride.id}')">+ Add guest</button>`:''}
+          <button class="btn btn-danger btn-sm" onclick="cancelRide('${ride.id}')">Cancel ride</button>
+        </div>`;
+      }
       else if(iAmIn) act=`<div style="margin-top:12px;"><button class="btn btn-danger btn-sm" onclick="cancelSeat('${ride.id}')">Cancel my seat</button></div>`;
       else if(iAmOut) act=`<div style="margin-top:12px;display:flex;align-items:center;gap:10px;"><span style="font-size:13px;color:var(--muted);">🚫 Not joining</span><button class="btn btn-secondary btn-sm" onclick="undoNotJoining('${ride.id}')">Undo</button></div>`;
       else act=`<div style="margin-top:12px;display:flex;gap:8px;">${!full?`<button class="btn btn-primary btn-sm" onclick="claimSeat('${ride.id}')">+ Join ride</button>`:''}<button class="btn btn-secondary btn-sm" onclick="markNotJoining('${ride.id}')">Not joining</button></div>`;
@@ -950,6 +974,27 @@
     // Switch to that date's tab
     selectedDate=date; buildDateTabs();
     showToast(`Ride posted for ${date===todayKey()?'today':formatDate(date)}! 🚗`);
+  };
+
+  let activeGuestRideId = null;
+  window.openAddGuestModal = function(rideId){
+    activeGuestRideId = rideId;
+    document.getElementById('guest-name').value = '';
+    document.getElementById('modal-add-guest').classList.add('open');
+  };
+  window.confirmAddGuest = async function(){
+    const name = document.getElementById('guest-name').value.trim();
+    if(!name){ showToast('Please enter a guest name'); return; }
+    if(!activeGuestRideId){ return; }
+    await updateDoc(doc(ridesCol(profile.groupId), activeGuestRideId), { passengers: arrayUnion(name + ' (guest)') });
+    closeModal('modal-add-guest');
+    showToast(`${name} added as guest 👤`);
+  };
+  window.removePassenger = async function(rideId, passengerName){
+    if(confirm(`Remove ${passengerName} from this ride?`)){
+      await updateDoc(doc(ridesCol(profile.groupId), rideId), { passengers: arrayRemove(passengerName) });
+      showToast(`${passengerName} removed`);
+    }
   };
 
   window.claimSeat = async function(rideId){
