@@ -126,6 +126,23 @@
     .capacity-banner { background: rgba(180,83,9,.08); border: 1px solid var(--warning); border-radius: 12px; padding: 14px 16px; margin-bottom: 16px; display: none; }
     .capacity-banner-title { font-weight: 600; font-size: 14px; color: var(--warning); margin-bottom: 2px; }
     .capacity-banner-sub { font-size: 13px; color: var(--muted); }
+
+    /* ══ TUTORIAL OVERLAY ══ */
+    .tutorial-overlay { position: fixed; inset: 0; background: rgba(13,31,45,.85); z-index: 900; display: none; align-items: flex-end; justify-content: center; backdrop-filter: blur(3px); }
+    .tutorial-overlay.open { display: flex; animation: fadeIn .3s ease; }
+    .tutorial-sheet { background: var(--surface); border-radius: 28px 28px 0 0; width: 100%; max-width: 420px; padding: 0 0 40px; overflow: hidden; user-select: none; }
+    .tutorial-track { display: flex; transition: transform .4s cubic-bezier(.4,0,.2,1); will-change: transform; }
+    .tutorial-card { min-width: 100%; padding: 36px 28px 20px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px; }
+    .tutorial-emoji { font-size: 64px; line-height: 1; }
+    .tutorial-title { font-size: 22px; font-weight: 700; letter-spacing: -.3px; color: var(--accent); }
+    .tutorial-body { font-size: 15px; color: var(--muted); line-height: 1.65; max-width: 300px; }
+    .tutorial-tip { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; font-size: 13px; color: var(--text); line-height: 1.6; width: 100%; text-align: left; }
+    .tutorial-tip strong { color: var(--accent); }
+    .tutorial-dots { display: flex; gap: 8px; justify-content: center; padding: 18px 0 14px; }
+    .tutorial-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); transition: all .25s; cursor: pointer; }
+    .tutorial-dot.active { background: var(--accent); width: 24px; border-radius: 4px; }
+    .tutorial-actions { display: flex; gap: 10px; padding: 0 28px; width: 100%; }
+    .tutorial-skip { font-size: 13px; color: var(--muted); text-align: center; margin-top: 12px; cursor: pointer; text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -347,6 +364,8 @@
     <br/>
     <button class="btn btn-secondary" onclick="openEditProfileModal()">Edit Profile</button>
     <br/><br/>
+    <button class="btn btn-secondary" onclick="openTutorial()">📖 Replay Tutorial</button>
+    <br/><br/>
     <button class="btn btn-danger" onclick="leaveGroup()">Leave Group</button>
     <br/><br/>
     <button class="btn btn-danger" onclick="signOut()">Sign Out</button>
@@ -372,6 +391,92 @@
       Profile
     </button>
   </nav>
+</div>
+
+<!-- ══ TUTORIAL OVERLAY ══ -->
+<div class="tutorial-overlay" id="tutorial-overlay">
+  <div class="tutorial-sheet" id="tutorial-sheet">
+    <div class="tutorial-track" id="tutorial-track">
+
+      <!-- Card 1: Welcome -->
+      <div class="tutorial-card">
+        <div class="tutorial-emoji">🚗</div>
+        <div class="tutorial-title">Welcome to RideSync!</div>
+        <div class="tutorial-body">Your group's carpool coordinator. Here's a quick tour so you're up and running in 60 seconds.</div>
+        <div class="tutorial-tip">👋 <strong>Swipe left</strong> to go through each tip, or use the buttons below.</div>
+      </div>
+
+      <!-- Card 2: Post or join a ride -->
+      <div class="tutorial-card">
+        <div class="tutorial-emoji">📅</div>
+        <div class="tutorial-title">Post or Join a Ride</div>
+        <div class="tutorial-body">The <strong>Rides</strong> tab shows all available rides. Scroll the date bar at the top to see upcoming days.</div>
+        <div class="tutorial-tip">
+          🚗 <strong>Drivers:</strong> Tap <em>"Offer my car"</em> to post a ride for any date.<br/><br/>
+          🙋 <strong>Passengers:</strong> Tap <em>"+ Join ride"</em> to claim a seat in someone's car.
+        </div>
+      </div>
+
+      <!-- Card 3: See who you're riding with -->
+      <div class="tutorial-card">
+        <div class="tutorial-emoji">👥</div>
+        <div class="tutorial-title">See Who's in the Car</div>
+        <div class="tutorial-body">Once people join a ride, you can see exactly who is riding along.</div>
+        <div class="tutorial-tip">
+          Tap the <strong>"👥 X passengers — tap to see"</strong> button on any ride card to expand the list of names and avatars.
+        </div>
+      </div>
+
+      <!-- Card 4: Schedule -->
+      <div class="tutorial-card">
+        <div class="tutorial-emoji">🕐</div>
+        <div class="tutorial-title">Auto-Schedule Drivers</div>
+        <div class="tutorial-body">Let RideSync rotate drivers automatically so no one carries the load alone.</div>
+        <div class="tutorial-tip">
+          Go to the <strong>Schedule</strong> tab → tap <em>⚙ Settings</em> → enable auto-scheduling, pick your trip days, set a departure time per day, and save.
+        </div>
+      </div>
+
+      <!-- Card 5: Mark yourself away -->
+      <div class="tutorial-card">
+        <div class="tutorial-emoji">🏖️</div>
+        <div class="tutorial-title">Mark Yourself Away</div>
+        <div class="tutorial-body">Can't drive on your scheduled day? Mark yourself away and the next driver in the rotation takes over automatically.</div>
+        <div class="tutorial-tip">
+          In the <strong>Schedule</strong> tab, find your next drive and tap <em>"Away"</em>. You can also tap <em>"🏖️ Mark me as away"</em> on your upcoming drive card.
+        </div>
+      </div>
+
+      <!-- Card 6: Invite people -->
+      <div class="tutorial-card">
+        <div class="tutorial-emoji">🔗</div>
+        <div class="tutorial-title">Invite Your Group</div>
+        <div class="tutorial-body">Share your group code or invite link so your colleagues can join and get approved.</div>
+        <div class="tutorial-tip">
+          Go to <strong>Members</strong> → copy the <em>Group Code</em> or tap <em>"🔗 Copy Invite Link"</em> to share. Drivers can approve or reject join requests.
+        </div>
+      </div>
+
+      <!-- Card 7: All done -->
+      <div class="tutorial-card">
+        <div class="tutorial-emoji">✅</div>
+        <div class="tutorial-title">You're all set!</div>
+        <div class="tutorial-body">That's everything you need to know. Enjoy a smoother commute with your group.</div>
+        <div class="tutorial-tip">💡 You can always replay this tutorial from your <strong>Profile</strong> tab.</div>
+      </div>
+
+    </div>
+
+    <!-- Dots -->
+    <div class="tutorial-dots" id="tutorial-dots"></div>
+
+    <!-- Buttons -->
+    <div class="tutorial-actions">
+      <button class="btn btn-secondary" id="tutorial-prev-btn" onclick="tutorialPrev()" style="display:none;">← Back</button>
+      <button class="btn btn-primary" id="tutorial-next-btn" onclick="tutorialNext()">Next →</button>
+    </div>
+    <div class="tutorial-skip" onclick="closeTutorial()">Skip tutorial</div>
+  </div>
 </div>
 
 <!-- MODALS -->
@@ -619,7 +724,7 @@
     await setDoc(doc(membersCol(groupId),authUser.uid),{uid:authUser.uid,name,hasCar,seats:hasCar==='yes'?seats:0,isAdmin:true,status:'approved',joinedAt:serverTimestamp()});
     await updateDoc(doc(usersCol,authUser.uid),{groupId,groupName,hasCar,seats:hasCar==='yes'?seats:0,isAdmin:true,status:'approved'});
     profile={...profile,groupId,groupName,hasCar,seats:hasCar==='yes'?seats:0,isAdmin:true,status:'approved'};
-    startApp(); showToast(`Group "${groupName}" created! 🎉`);
+    startApp(true); showToast(`Group "${groupName}" created! 🎉`);
   };
 
   // ══ JOIN GROUP ══
@@ -668,7 +773,7 @@
   };
 
   // ══ START APP ══
-  function startApp(){
+  function startApp(isNewUser = false){
     selectedDate=todayKey();
     document.getElementById('loading-overlay').style.display='none';
     document.getElementById('bottom-nav').style.display='flex';
@@ -677,6 +782,10 @@
     renderTodayHeader();
     renderProfile();
     startListeners();
+    // Show tutorial for new users or if not yet seen
+    if(isNewUser || (profile && !profile.tutorialSeen)){
+      setTimeout(() => window.openTutorial(), 800);
+    }
   }
 
   function startListeners(){
@@ -1209,6 +1318,68 @@
     setTimeout(()=>t.classList.remove('show'),2500);
   }
   window.showToast=showToast;
+
+  // ══ TUTORIAL ══
+  const TUTORIAL_TOTAL = 7;
+  let tutorialIndex = 0;
+
+  function initTutorialDots(){
+    const dots = document.getElementById('tutorial-dots');
+    dots.innerHTML = Array.from({length:TUTORIAL_TOTAL}, (_,i) =>
+      `<div class="tutorial-dot${i===0?' active':''}" onclick="tutorialGoTo(${i})"></div>`
+    ).join('');
+  }
+
+  function updateTutorial(){
+    document.getElementById('tutorial-track').style.transform = `translateX(-${tutorialIndex * 100}%)`;
+    // Dots
+    document.querySelectorAll('.tutorial-dot').forEach((d,i) => d.classList.toggle('active', i===tutorialIndex));
+    // Buttons
+    const prevBtn = document.getElementById('tutorial-prev-btn');
+    const nextBtn = document.getElementById('tutorial-next-btn');
+    prevBtn.style.display = tutorialIndex === 0 ? 'none' : 'block';
+    if(tutorialIndex === TUTORIAL_TOTAL - 1){
+      nextBtn.textContent = 'Get Started ✓';
+    } else {
+      nextBtn.textContent = 'Next →';
+    }
+  }
+
+  window.tutorialNext = function(){
+    if(tutorialIndex < TUTORIAL_TOTAL - 1){ tutorialIndex++; updateTutorial(); }
+    else { closeTutorial(); }
+  };
+  window.tutorialPrev = function(){
+    if(tutorialIndex > 0){ tutorialIndex--; updateTutorial(); }
+  };
+  window.tutorialGoTo = function(i){ tutorialIndex = i; updateTutorial(); };
+
+  window.closeTutorial = function(){
+    document.getElementById('tutorial-overlay').classList.remove('open');
+    // Mark as seen in Firestore so it never shows again
+    if(authUser){ updateDoc(doc(usersCol, authUser.uid), { tutorialSeen: true }).catch(()=>{}); }
+  };
+
+  window.openTutorial = function(){
+    tutorialIndex = 0;
+    initTutorialDots();
+    updateTutorial();
+    document.getElementById('tutorial-overlay').classList.add('open');
+  };
+
+  // Touch/swipe support
+  let tStartX = 0;
+  const sheet = document.getElementById('tutorial-sheet');
+  sheet.addEventListener('touchstart', e => { tStartX = e.touches[0].clientX; }, {passive:true});
+  sheet.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - tStartX;
+    if(Math.abs(dx) > 50){ dx < 0 ? window.tutorialNext() : window.tutorialPrev(); }
+  }, {passive:true});
+
+  // Show tutorial after first group join/create — hooked into startApp
+  const _origStartApp = startApp;
+  // We patch startApp to check tutorialSeen after auth loads
+  // (tutorial check is done inside onAuthStateChanged after profile loads)
 </script>
 </body>
 </html>
